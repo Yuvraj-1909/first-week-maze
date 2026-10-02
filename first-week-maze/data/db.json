@@ -1,0 +1,566 @@
+{
+  "users": [
+    {
+      "id": "u1",
+      "name": "Aarav Mehta",
+      "email": "aarav@northstar.example",
+      "role": "Software Engineer",
+      "department": "Backend Engineering",
+      "location": "Noida",
+      "joiningDate": "2026-09-15",
+      "experience": "Early career",
+      "status": "in_progress",
+      "buddy": "Riya Sharma"
+    },
+    {
+      "id": "u2",
+      "name": "Maya Rao",
+      "email": "maya@northstar.example",
+      "role": "Product Manager",
+      "department": "Product",
+      "location": "Mumbai",
+      "joiningDate": "2026-09-15",
+      "experience": "Experienced",
+      "status": "in_progress",
+      "buddy": "Kabir Jain"
+    },
+    {
+      "id": "u3",
+      "name": "Ishita Kapoor",
+      "email": "ishita@northstar.example",
+      "role": "HR Executive",
+      "department": "People Operations",
+      "location": "Noida",
+      "joiningDate": "2026-09-10",
+      "experience": "Early career",
+      "status": "stuck",
+      "buddy": "Neha Bansal"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "Complete employee profile",
+      "description": "Add emergency contact, bank details and required personal information in the HR portal.",
+      "day": 1,
+      "priority": "High",
+      "estimatedMinutes": 15,
+      "required": true,
+      "role": "All",
+      "department": "All",
+      "location": "All",
+      "source": "HR Handbook",
+      "section": "2.1 Employee profile",
+      "link": "https://intranet.example/hr/profile",
+      "owner": "People Operations",
+      "dueOffsetDays": 0
+    },
+    {
+      "id": "t2",
+      "title": "Security awareness training",
+      "description": "Complete the security awareness module before receiving access to restricted engineering systems.",
+      "day": 1,
+      "priority": "High",
+      "estimatedMinutes": 25,
+      "required": true,
+      "role": "All",
+      "department": "All",
+      "location": "All",
+      "source": "Security Policy",
+      "section": "3.2 Mandatory training",
+      "link": "https://learn.example/security-101",
+      "owner": "Security Team",
+      "dueOffsetDays": 0
+    },
+    {
+      "id": "t3",
+      "title": "Collect laptop & workspace kit",
+      "description": "Collect your assigned laptop, badge and workspace kit from IT / workplace services.",
+      "day": 1,
+      "priority": "High",
+      "estimatedMinutes": 20,
+      "required": true,
+      "role": "All",
+      "department": "All",
+      "location": "Noida",
+      "source": "IT Setup Guide",
+      "section": "1.3 Device handover",
+      "link": "https://intranet.example/it/device-handover",
+      "owner": "IT Service Desk",
+      "dueOffsetDays": 0
+    },
+    {
+      "id": "t4",
+      "title": "Meet your onboarding buddy",
+      "description": "30-minute introduction with your assigned buddy to understand team norms and where to ask questions.",
+      "day": 1,
+      "priority": "Medium",
+      "estimatedMinutes": 30,
+      "required": true,
+      "role": "All",
+      "department": "All",
+      "location": "All",
+      "source": "HR Handbook",
+      "section": "4.1 Buddy programme",
+      "link": "https://intranet.example/hr/buddy",
+      "owner": "People Operations",
+      "dueOffsetDays": 0
+    },
+    {
+      "id": "t5",
+      "title": "Configure development environment",
+      "description": "Install the approved editor, runtime and internal CLI using the engineering setup guide.",
+      "day": 2,
+      "priority": "High",
+      "estimatedMinutes": 45,
+      "required": true,
+      "role": "Software Engineer",
+      "department": "Backend Engineering",
+      "location": "Noida",
+      "source": "Engineering Onboarding Guide",
+      "section": "1.4 Local environment",
+      "link": "https://eng.example/setup/backend",
+      "owner": "Backend Platform",
+      "dueOffsetDays": 1
+    },
+    {
+      "id": "t6",
+      "title": "Join engineering channels",
+      "description": "Join the backend engineering Teams channels and read the pinned operating notes.",
+      "day": 2,
+      "priority": "Medium",
+      "estimatedMinutes": 10,
+      "required": true,
+      "role": "Software Engineer",
+      "department": "Backend Engineering",
+      "location": "All",
+      "source": "Engineering Onboarding Guide",
+      "section": "2.1 Team communication",
+      "link": "https://teams.example/backend",
+      "owner": "Backend Platform",
+      "dueOffsetDays": 1
+    },
+    {
+      "id": "t7",
+      "title": "Request repository access",
+      "description": "Request read access to the backend monorepo after security training is complete.",
+      "day": 2,
+      "priority": "High",
+      "estimatedMinutes": 10,
+      "required": true,
+      "role": "Software Engineer",
+      "department": "Backend Engineering",
+      "location": "All",
+      "source": "Engineering Onboarding Guide",
+      "section": "3.1 Source control access",
+      "link": "https://access.example/repos",
+      "owner": "IT Service Desk",
+      "dueOffsetDays": 1,
+      "dependsOn": "t2"
+    },
+    {
+      "id": "t8",
+      "title": "Read backend architecture overview",
+      "description": "Review services, ownership and deployment flow for the backend platform.",
+      "day": 3,
+      "priority": "Medium",
+      "estimatedMinutes": 30,
+      "required": true,
+      "role": "Software Engineer",
+      "department": "Backend Engineering",
+      "location": "All",
+      "source": "Engineering Onboarding Guide",
+      "section": "4.2 Architecture map",
+      "link": "https://eng.example/architecture",
+      "owner": "Backend Platform",
+      "dueOffsetDays": 2
+    },
+    {
+      "id": "t9",
+      "title": "Complete office & facilities orientation",
+      "description": "Review building access, cafeteria, emergency exits and work-area guidance for your location.",
+      "day": 2,
+      "priority": "Low",
+      "estimatedMinutes": 15,
+      "required": false,
+      "role": "All",
+      "department": "All",
+      "location": "All",
+      "source": "Office & Location Guide",
+      "section": "1.1 Site orientation",
+      "link": "https://intranet.example/office",
+      "owner": "Workplace Services",
+      "dueOffsetDays": 1
+    },
+    {
+      "id": "t10",
+      "title": "Meet product lead",
+      "description": "Introductory discussion on roadmap, current priorities and team rituals.",
+      "day": 3,
+      "priority": "Medium",
+      "estimatedMinutes": 30,
+      "required": true,
+      "role": "Product Manager",
+      "department": "Product",
+      "location": "Mumbai",
+      "source": "Product Onboarding Guide",
+      "section": "1.2 Product context",
+      "link": "https://product.example/start",
+      "owner": "Product Leadership",
+      "dueOffsetDays": 2
+    },
+    {
+      "id": "t11",
+      "title": "Review product analytics stack",
+      "description": "Get familiar with dashboards, metric definitions and ownership of the core product KPIs.",
+      "day": 3,
+      "priority": "High",
+      "estimatedMinutes": 35,
+      "required": true,
+      "role": "Product Manager",
+      "department": "Product",
+      "location": "Mumbai",
+      "source": "Product Onboarding Guide",
+      "section": "2.3 Analytics",
+      "link": "https://analytics.example/kpi",
+      "owner": "Product Analytics",
+      "dueOffsetDays": 2
+    },
+    {
+      "id": "t12",
+      "title": "Review hiring & employee lifecycle handbook",
+      "description": "Read the People Operations playbook covering joining, transfers and employee support.",
+      "day": 2,
+      "priority": "High",
+      "estimatedMinutes": 40,
+      "required": true,
+      "role": "HR Executive",
+      "department": "People Operations",
+      "location": "Noida",
+      "source": "HR Handbook",
+      "section": "5.2 Employee lifecycle",
+      "link": "https://intranet.example/hr/lifecycle",
+      "owner": "People Operations",
+      "dueOffsetDays": 1
+    },
+    {
+      "id": "t13",
+      "title": "Set up HR case queue",
+      "description": "Learn how employee cases are triaged, assigned and escalated.",
+      "day": 3,
+      "priority": "High",
+      "estimatedMinutes": 25,
+      "required": true,
+      "role": "HR Executive",
+      "department": "People Operations",
+      "location": "Noida",
+      "source": "HR Operations Guide",
+      "section": "2.2 Case management",
+      "link": "https://hr.example/cases",
+      "owner": "People Operations",
+      "dueOffsetDays": 2
+    },
+    {
+      "id": "t14",
+      "title": "Shadow an HR support session",
+      "description": "Observe one employee-support session with a People Operations specialist.",
+      "day": 4,
+      "priority": "Medium",
+      "estimatedMinutes": 45,
+      "required": true,
+      "role": "HR Executive",
+      "department": "People Operations",
+      "location": "Noida",
+      "source": "HR Operations Guide",
+      "section": "3.1 Supported learning",
+      "link": "https://hr.example/shadowing",
+      "owner": "People Operations",
+      "dueOffsetDays": 3
+    },
+    {
+      "id": "t15",
+      "title": "First-week check-in",
+      "description": "Complete a short check-in with your manager and onboarding buddy: wins, blockers and next steps.",
+      "day": 5,
+      "priority": "Medium",
+      "estimatedMinutes": 20,
+      "required": true,
+      "role": "All",
+      "department": "All",
+      "location": "All",
+      "source": "HR Handbook",
+      "section": "4.4 Week-one check-in",
+      "link": "https://intranet.example/hr/checkin",
+      "owner": "People Operations",
+      "dueOffsetDays": 4
+    }
+  ],
+  "taskProgress": [
+    {
+      "userId": "u1",
+      "taskId": "t1",
+      "status": "complete"
+    },
+    {
+      "userId": "u1",
+      "taskId": "t2",
+      "status": "complete"
+    },
+    {
+      "userId": "u1",
+      "taskId": "t3",
+      "status": "complete"
+    },
+    {
+      "userId": "u1",
+      "taskId": "t4",
+      "status": "complete"
+    },
+    {
+      "userId": "u1",
+      "taskId": "t5",
+      "status": "complete"
+    },
+    {
+      "userId": "u1",
+      "taskId": "t6",
+      "status": "pending"
+    },
+    {
+      "userId": "u1",
+      "taskId": "t7",
+      "status": "blocked"
+    },
+    {
+      "userId": "u1",
+      "taskId": "t8",
+      "status": "pending"
+    },
+    {
+      "userId": "u1",
+      "taskId": "t9",
+      "status": "complete"
+    },
+    {
+      "userId": "u1",
+      "taskId": "t15",
+      "status": "pending"
+    },
+    {
+      "userId": "u2",
+      "taskId": "t1",
+      "status": "complete"
+    },
+    {
+      "userId": "u2",
+      "taskId": "t2",
+      "status": "complete"
+    },
+    {
+      "userId": "u2",
+      "taskId": "t4",
+      "status": "complete"
+    },
+    {
+      "userId": "u2",
+      "taskId": "t9",
+      "status": "complete"
+    },
+    {
+      "userId": "u2",
+      "taskId": "t10",
+      "status": "complete"
+    },
+    {
+      "userId": "u2",
+      "taskId": "t11",
+      "status": "pending"
+    },
+    {
+      "userId": "u2",
+      "taskId": "t15",
+      "status": "pending"
+    },
+    {
+      "userId": "u3",
+      "taskId": "t1",
+      "status": "complete"
+    },
+    {
+      "userId": "u3",
+      "taskId": "t2",
+      "status": "pending"
+    },
+    {
+      "userId": "u3",
+      "taskId": "t4",
+      "status": "pending"
+    },
+    {
+      "userId": "u3",
+      "taskId": "t9",
+      "status": "complete"
+    },
+    {
+      "userId": "u3",
+      "taskId": "t12",
+      "status": "pending"
+    },
+    {
+      "userId": "u3",
+      "taskId": "t13",
+      "status": "blocked"
+    },
+    {
+      "userId": "u3",
+      "taskId": "t14",
+      "status": "pending"
+    },
+    {
+      "userId": "u3",
+      "taskId": "t15",
+      "status": "pending"
+    }
+  ],
+  "knowledgeDocuments": [
+    {
+      "id": "k1",
+      "title": "HR Handbook",
+      "section": "2.1 Employee profile",
+      "text": "All new employees complete their employee profile during Day 1. People Operations owns profile questions and employee lifecycle support.",
+      "tags": [
+        "hr",
+        "profile",
+        "people"
+      ]
+    },
+    {
+      "id": "k2",
+      "title": "Security Policy",
+      "section": "3.2 Mandatory training",
+      "text": "Security awareness training is required before access to restricted engineering systems. Questions about security exceptions should be escalated to the Security Team.",
+      "tags": [
+        "security",
+        "training",
+        "access"
+      ]
+    },
+    {
+      "id": "k3",
+      "title": "IT Setup Guide",
+      "section": "1.3 Device handover",
+      "text": "Laptop and workspace kit collection for Noida employees is coordinated by the IT Service Desk. Device issues should be raised with the IT Service Desk rather than bypassing standard controls.",
+      "tags": [
+        "it",
+        "laptop",
+        "noida"
+      ]
+    },
+    {
+      "id": "k4",
+      "title": "Office & Location Guide",
+      "section": "1.1 Site orientation",
+      "text": "Noida employees use the Noida site orientation guide. Mumbai employees use the Mumbai site orientation guide. Workplace Services owns site-access and facilities questions.",
+      "tags": [
+        "office",
+        "noida",
+        "mumbai",
+        "facilities"
+      ]
+    },
+    {
+      "id": "k5",
+      "title": "Employee Directory",
+      "section": "1.0 Core contacts",
+      "text": "People Operations: Neha Bansal. IT Service Desk: Arjun Verma. Security Team: Dev Malik. Workplace Services: Kavya Sethi. Backend Platform: Riya Sharma. Product Leadership: Kabir Jain.",
+      "tags": [
+        "contacts",
+        "hr",
+        "it",
+        "security",
+        "engineering",
+        "product"
+      ]
+    },
+    {
+      "id": "k6",
+      "title": "Engineering Onboarding Guide",
+      "section": "3.1 Source control access",
+      "text": "Software engineers request repository access after mandatory security training is complete. Backend Platform owns architecture questions; the IT Service Desk handles access requests.",
+      "tags": [
+        "engineering",
+        "repository",
+        "backend",
+        "access"
+      ]
+    },
+    {
+      "id": "k7",
+      "title": "Product Onboarding Guide",
+      "section": "2.3 Analytics",
+      "text": "Product managers review the core KPI dashboard and metric definitions during their first week. Product Analytics owns questions about KPI definitions.",
+      "tags": [
+        "product",
+        "analytics",
+        "kpi"
+      ]
+    },
+    {
+      "id": "k8",
+      "title": "HR Operations Guide",
+      "section": "2.2 Case management",
+      "text": "HR executives use the HR case queue to triage employee support requests. Sensitive employee matters should be escalated to the appropriate People Operations specialist.",
+      "tags": [
+        "hr",
+        "cases",
+        "escalation"
+      ]
+    }
+  ],
+  "contacts": [
+    {
+      "id": "c1",
+      "name": "Neha Bansal",
+      "team": "People Operations",
+      "role": "HR",
+      "email": "neha@northstar.example"
+    },
+    {
+      "id": "c2",
+      "name": "Arjun Verma",
+      "team": "IT Service Desk",
+      "role": "IT",
+      "email": "it-help@northstar.example"
+    },
+    {
+      "id": "c3",
+      "name": "Dev Malik",
+      "team": "Security Team",
+      "role": "Security",
+      "email": "security@northstar.example"
+    },
+    {
+      "id": "c4",
+      "name": "Kavya Sethi",
+      "team": "Workplace Services",
+      "role": "Facilities",
+      "email": "workplace@northstar.example"
+    },
+    {
+      "id": "c5",
+      "name": "Riya Sharma",
+      "team": "Backend Platform",
+      "role": "Engineering",
+      "email": "riya@northstar.example"
+    },
+    {
+      "id": "c6",
+      "name": "Kabir Jain",
+      "team": "Product Leadership",
+      "role": "Product",
+      "email": "kabir@northstar.example"
+    }
+  ],
+  "supportEscalations": [],
+  "reminders": []
+}
