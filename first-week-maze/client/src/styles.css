@@ -68,3 +68,5 @@ body{background:radial-gradient(ellipse at 84% 0%,rgba(124,93,255,.20),transpare
 .knowledgeNotice{padding:14px;border:1px solid rgba(255,112,129,.25);border-radius:12px;color:#ffacb5;background:rgba(255,112,129,.07);font-size:11px}
 .knowledgeDemoNote{padding:4px 2px;line-height:1.5}
 @media(max-width:760px){.knowledgeGrid{grid-template-columns:1fr}.knowledgeHero{padding:19px}.knowledgeHero h2{font-size:20px}}
+
+.knowledgeBack{margin-top:14px}
