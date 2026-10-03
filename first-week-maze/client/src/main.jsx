@@ -89,8 +89,8 @@ function App(){
 
     <main className="main">
 
-      <header className="topbar"><div><div className="eyebrow">{mode==='employee'?'EMPLOYEE WORKSPACE':'PEOPLE OPERATIONS'}</div><h1>{mode==='employee'?(page==='knowledge'?'Knowledge base, made searchable.':'Your first week, without the maze.'):'Onboarding health at a glance.'}</h1></div><div className="topActions"><button className="ghost" onClick={()=>setShowGenerator(true)}>✦ Personalize</button><button className="ghost mobileDemo" onClick={changeProfile}>Change profile</button><div className="notif">◔<span></span></div><div className="avatar small">{user.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div></div></header>
-      {mode==='employee'?(page==='knowledge'?<KnowledgeBaseView/>:<EmployeeView {...{user,plan,stats,days,filtered,filter,setFilter,search,setSearch,toggleTask,scheduleReminder,assistantOpen,setAssistantOpen,messages,typing,question,setQuestion,askAssistant,showGenerator,setShowGenerator,profileForm,setProfileForm,generate}}/>):<AdminView admin={admin} onRefresh={loadAdmin}/>} 
+      <header className="topbar"><div><div className="eyebrow">{mode==='employee'?'EMPLOYEE WORKSPACE':'PEOPLE OPERATIONS'}</div><h1>{mode==='employee'?(page==='knowledge'?'Knowledge base, made searchable.':'Your first week, without the maze.'):'Onboarding health at a glance.'}</h1></div><div className="topActions">{mode==='employee'&&page==='overview'&&<button className="ghost" onClick={()=>setShowGenerator(true)}>✦ Personalize</button>}<button className="ghost mobileDemo" onClick={changeProfile}>Change profile</button><div className="notif">◔<span></span></div><div className="avatar small">{user.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div></div></header>
+      {mode==='employee'?(page==='knowledge'?<KnowledgeBaseView onBack={()=>setPage('overview')}/>:<EmployeeView {...{user,plan,stats,days,filtered,filter,setFilter,search,setSearch,toggleTask,scheduleReminder,assistantOpen,setAssistantOpen,messages,typing,question,setQuestion,askAssistant,showGenerator,setShowGenerator,profileForm,setProfileForm,generate}}/>):<AdminView admin={admin} onRefresh={loadAdmin}/>} 
     </main>
     {toast && <div className="toast">{toast}</div>}
   </div>
@@ -157,7 +157,7 @@ function EmployeeView({user,plan,stats,days,filtered,filter,setFilter,search,set
   </>
 }
 
-function KnowledgeBaseView(){
+function KnowledgeBaseView({onBack}){
   const [documents,setDocuments]=useState([])
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
@@ -189,6 +189,7 @@ function KnowledgeBaseView(){
         <div className="cardKicker">ONBOARDING SOURCE LIBRARY</div>
         <h2>Find the guidance behind your first week.</h2>
         <p>Search the same stored onboarding sources that support the assistant’s answers.</p>
+        <button type="button" className="ghost knowledgeBack" onClick={onBack}>← Back to overview</button>
       </div>
       <div className="knowledgeBadge"><strong>{documents.length}</strong><span>sources</span></div>
     </div>
