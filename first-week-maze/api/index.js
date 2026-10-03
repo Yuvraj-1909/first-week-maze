@@ -152,9 +152,13 @@ app.get('/api/health', (_, res) => res.json({ ok: true }))
 app.get('/api/users', async (_, res) => res.json((await loadDb()).users))
 app.get('/api/me/:id', async (req,res)=>{ const db=await loadDb(); const user=db.users.find(u=>u.id===req.params.id); if(!user) return res.status(404).json({error:'User not found'}); res.json({user, plan:getPlan(db,user)}) })
 app.post('/api/onboarding/generate', async (req,res)=>{
+  const body=req.body || {}
+  const required=['name','role','department','location','joiningDate']
+  if(required.some(field=>typeof body[field]!=='string' || !body[field].trim())) return res.status(400).json({error:'Name, job title, team, office location, and joining date are required'})
+  if(required.slice(0,4).some(field=>body[field].trim().length>80)) return res.status(400).json({error:'Profile fields must be 80 characters or fewer'})
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(body.joiningDate) || Number.isNaN(Date.parse(body.joiningDate)) || new Date(body.joiningDate).toISOString().slice(0,10)!==body.joiningDate) return res.status(400).json({error:'Joining date must be a valid date'})
   const db=await loadDb()
-  const body=req.body
-  const user={id:body.id || `u-${crypto.randomUUID()}`, name:body.name, email:body.email || 'demo@northstar.example', role:body.role, department:body.department, location:body.location, joiningDate:body.joiningDate, experience:body.experience || 'Early career', status:'in_progress', buddy: body.buddy || 'Riya Sharma'}
+  const user={id:body.id || `u-${crypto.randomUUID()}`, name:body.name.trim(), email:body.email || 'demo@northstar.example', role:body.role.trim(), department:body.department.trim(), location:body.location.trim(), joiningDate:body.joiningDate, experience:body.experience || 'Early career', status:'in_progress', buddy: body.buddy || 'Riya Sharma'}
   const existing=db.users.find(u=>u.id===user.id)
   if(existing) Object.assign(existing,user)
   else db.users.push(user)

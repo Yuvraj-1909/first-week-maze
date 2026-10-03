@@ -22,3 +22,19 @@ body{background:radial-gradient(ellipse at 84% 0%,rgba(124,93,255,.20),transpare
 .connectionCard{position:relative;z-index:1;padding:34px;border:1px solid rgba(255,255,255,.1);border-radius:24px;background:linear-gradient(145deg,rgba(18,27,49,.96),rgba(10,16,31,.94));box-shadow:0 28px 90px rgba(0,0,0,.36)}
 .connectionCard .brandMark{margin-bottom:30px}.connectionCard h1{font-size:clamp(28px,4vw,42px);letter-spacing:-.055em;line-height:1.05;margin:12px 0}.connectionCard p{color:#9ba8c2;font-size:14px;line-height:1.7;margin:0 0 22px}.connectionCard code{color:#b9afff;background:#161d34;border-radius:5px;padding:2px 5px}.connectionStatus{display:flex;align-items:center;gap:9px;color:#ffc978;font-size:12px;padding:12px 14px;background:rgba(246,201,105,.07);border:1px solid rgba(246,201,105,.14);border-radius:10px;margin-bottom:18px}.statusDot{width:8px;height:8px;background:#f5bd58;border-radius:50%;box-shadow:0 0 14px rgba(245,189,88,.65)}.connectionCard small{display:block;color:#75829d;font-size:11px;margin-top:20px}.connectionMaze{min-height:240px;align-self:center;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:12px;padding:14px;transform:rotate(-7deg);border:1px solid rgba(121,132,255,.16);border-radius:30px;background:linear-gradient(145deg,rgba(90,101,214,.07),rgba(50,216,200,.035));box-shadow:0 0 100px rgba(90,101,214,.1)}.connectionMaze span{display:grid;place-items:center;border:1px solid rgba(132,146,255,.18);border-radius:16px;color:#808bb5;font-size:12px;background:linear-gradient(145deg,rgba(24,33,61,.72),rgba(15,26,42,.35))}.connectionMaze span:nth-child(2),.connectionMaze span:nth-child(4){opacity:.45}.connectionMaze span:nth-child(3){border-color:rgba(62,221,206,.43);color:#70e1d7;box-shadow:0 0 24px rgba(62,221,206,.12)}
 @media(max-width:760px){.connectionScreen{grid-template-columns:1fr;gap:18px;padding:18px}.connectionCard{padding:25px}.connectionMaze{min-height:125px;max-width:340px;width:100%;margin:auto}.heroCard:after{right:-22px;opacity:.1}}
+
+.profileSetupScreen{grid-template-columns:minmax(300px,580px) minmax(180px,300px);gap:38px}
+.profileSetupCard{width:100%}
+.profileSetupCard .brand{display:flex;align-items:center;gap:12px;margin-bottom:26px}
+.profileSetupCard .brandMark{margin:0}
+.profileFields{margin:18px 0 10px}
+.profileFields label{font-size:11px;color:#aeb9cf}
+.profileFields input{font-size:13px;padding:12px}
+.profileHint{display:block;color:#8490ab;font-size:10px;line-height:1.6;margin-top:8px}
+.profileSubmit{width:100%;justify-content:center;margin-top:18px}
+.profileSubmit:disabled{opacity:.65;cursor:wait}
+.profileError{margin-top:13px;padding:10px 12px;border-radius:9px;border:1px solid rgba(255,120,145,.28);background:rgba(255,90,120,.08);color:#ffb0bf;font-size:12px}
+.profilePrivacy{margin-top:17px;color:#75829d;font-size:10px;line-height:1.6}
+.profileChange{margin:0 20px 20px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:transparent;color:#929fba;font-size:10px;cursor:pointer}
+.profileChange:hover{color:#e7ecfb;border-color:rgba(151,137,255,.5)}
+@media(max-width:760px){.profileSetupScreen{grid-template-columns:1fr;gap:18px}.profileFields{grid-template-columns:1fr}.profileSetupCard{padding:22px}}
