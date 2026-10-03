@@ -10,8 +10,44 @@ const DB_PATH = path.join(__dirname, '..', 'data', 'db.json')
 app.use(express.json())
 app.use(express.static(path.join(__dirname, '..', 'client', 'dist')))
 
-function loadDb() { return JSON.parse(fs.readFileSync(DB_PATH, 'utf8')) }
-function saveDb(db) { fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2)) }
+const SUPABASE_URL = process.env.SUPABASE_URL
+const SUPABASE_SECRET = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+const USE_REMOTE_DB = Boolean(SUPABASE_URL && SUPABASE_SECRET)
+
+async function loadDb() {
+  if (!USE_REMOTE_DB) return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'))
+  const base = SUPABASE_URL.replace(/\/$/, '')
+  const headers = { apikey: SUPABASE_SECRET }
+  if (SUPABASE_SECRET.startsWith('eyJ')) headers.Authorization = `Bearer ${SUPABASE_SECRET}`
+  const response = await fetch(`${base}/rest/v1/app_state?id=eq.main&select=payload`, { headers })
+  if (!response.ok) throw new Error('Could not read app data store')
+  const rows = await response.json()
+  if (rows.length) return rows[0].payload
+  // Seed the hosted database once from the bundled demo data.
+  const seed = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'))
+  await saveDb(seed)
+  return seed
+}
+
+async function saveDb(db) {
+  if (!USE_REMOTE_DB) {
+    if (process.env.VERCEL) throw new Error('Persistent database is not configured')
+    fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2))
+    return
+  }
+  const base = SUPABASE_URL.replace(/\/$/, '')
+  const response = await fetch(`${base}/rest/v1/app_state?on_conflict=id`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_SECRET,
+      ...(SUPABASE_SECRET.startsWith('eyJ') ? { Authorization: `Bearer ${SUPABASE_SECRET}` } : {}),
+      'Content-Type': 'application/json',
+      Prefer: 'resolution=merge-duplicates,return=minimal'
+    },
+    body: JSON.stringify({ id: 'main', payload: db, updated_at: new Date().toISOString() })
+  })
+  if (!response.ok) throw new Error('Could not save app data store')
+}
 function norm(v) { return String(v || '').toLowerCase() }
 function matchesRule(task, user) {
   return (task.role === 'All' || task.role === user.role) &&
@@ -83,21 +119,50 @@ function groundedAnswer(db, user, question) {
   return { answer, source: { title: source.title, section: source.section, text: source.text }, contact, uncertainty, handoff: uncertainty || q.includes('sensitive') || q.includes('confidential') }
 }
 
+async function aiGroundedAnswer(db, user, question) {
+  const fallback = groundedAnswer(db, user, question)
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) return { ...fallback, aiUsed: false }
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: process.env.OPENAI_MODEL || 'gpt-5-mini',
+        store: false,
+        max_output_tokens: 180,
+        instructions: 'You are an employee onboarding helper. Answer using only the approved source provided in the input. Do not invent policies, dates, people, contact details, or access permissions. If the source does not answer the question, say you are unsure and recommend the provided human contact. Keep the answer concise.',
+        input: `Employee role: ${user.role}; department: ${user.department}; office: ${user.location}.\\nQuestion: ${question}\\nApproved source: ${fallback.source.title} — ${fallback.source.section}\\nSource text: ${fallback.source.text}\\nFallback answer: ${fallback.answer}`
+      })
+    })
+    if (!response.ok) return { ...fallback, aiUsed: false }
+    const data = await response.json()
+    const answer = (data.output || [])
+      .flatMap(item => item.content || [])
+      .find(item => item.type === 'output_text')?.text?.trim()
+    if (!answer) return { ...fallback, aiUsed: false }
+    return { ...fallback, answer, aiUsed: true }
+  } catch (_) {
+    return { ...fallback, aiUsed: false }
+  }
+}
+
 app.get('/api/health', (_, res) => res.json({ ok: true }))
-app.get('/api/users', (_, res) => res.json(loadDb().users))
-app.get('/api/me/:id', (req,res)=>{ const db=loadDb(); const user=db.users.find(u=>u.id===req.params.id); if(!user) return res.status(404).json({error:'User not found'}); res.json({user, plan:getPlan(db,user)}) })
-app.post('/api/onboarding/generate', (req,res)=>{
-  const db=loadDb()
+app.get('/api/users', async (_, res) => res.json((await loadDb()).users))
+app.get('/api/me/:id', async (req,res)=>{ const db=await loadDb(); const user=db.users.find(u=>u.id===req.params.id); if(!user) return res.status(404).json({error:'User not found'}); res.json({user, plan:getPlan(db,user)}) })
+app.post('/api/onboarding/generate', async (req,res)=>{
+  const db=await loadDb()
   const body=req.body
   const user={id:body.id || `u-${crypto.randomUUID()}`, name:body.name, email:body.email || 'demo@northstar.example', role:body.role, department:body.department, location:body.location, joiningDate:body.joiningDate, experience:body.experience || 'Early career', status:'in_progress', buddy: body.buddy || 'Riya Sharma'}
   const existing=db.users.find(u=>u.id===user.id)
   if(existing) Object.assign(existing,user)
   else db.users.push(user)
-  saveDb(db)
+  await saveDb(db)
   res.json({user, plan:getPlan(db,user)})
 })
-app.patch('/api/tasks/:userId/:taskId', (req,res)=>{
-  const db=loadDb(); const {userId,taskId}=req.params; const status=req.body.status
+app.patch('/api/tasks/:userId/:taskId', async (req,res)=>{
+  const db=await loadDb(); const {userId,taskId}=req.params; const status=req.body.status
   if(!['pending','complete','blocked'].includes(status)) return res.status(400).json({error:'Invalid status'})
   const user=db.users.find(u=>u.id===userId)
   const task=db.tasks.find(t=>t.id===taskId)
@@ -113,49 +178,56 @@ app.patch('/api/tasks/:userId/:taskId', (req,res)=>{
   })
   // A completed task no longer needs a scheduled nudge.
   if(status==='complete') (db.reminders || []).filter(r=>r.userId===userId&&r.taskId===taskId&&r.status==='scheduled').forEach(r=>r.status='cancelled')
-  saveDb(db); res.json({plan:getPlan(db,user)})
+  await saveDb(db); res.json({plan:getPlan(db,user)})
 })
-app.post('/api/reminders', (req,res)=>{
-  const db=loadDb(); const {userId,taskId,remindAt}=req.body || {}
+app.post('/api/reminders', async (req,res)=>{
+  const db=await loadDb(); const {userId,taskId,remindAt}=req.body || {}
   const user=db.users.find(u=>u.id===userId); const task=db.tasks.find(t=>t.id===taskId)
   if(!user || !task || !matchesRule(task,user)) return res.status(404).json({error:'Assigned user or task not found'})
   if(!db.reminders) db.reminders=[]
   db.reminders.filter(r=>r.userId===userId&&r.taskId===taskId&&r.status==='scheduled').forEach(r=>r.status='replaced')
   const reminder={id:crypto.randomUUID(),userId,taskId,remindAt:remindAt||new Date(Date.now()+86400000).toISOString(),status:'scheduled',createdAt:new Date().toISOString()}
-  db.reminders.push(reminder); saveDb(db)
+  db.reminders.push(reminder); await saveDb(db)
   res.status(201).json({reminder,plan:getPlan(db,user)})
 })
-app.post('/api/assistant', (req,res)=>{
-  const db=loadDb(); const user=db.users.find(u=>u.id===req.body.userId); if(!user) return res.status(404).json({error:'User not found'})
-  const result=groundedAnswer(db,user,req.body.question || '')
+app.post('/api/assistant', async (req,res)=>{
+  const db=await loadDb(); const user=db.users.find(u=>u.id===req.body.userId); if(!user) return res.status(404).json({error:'User not found'})
+  const result=await aiGroundedAnswer(db,user,req.body.question || '')
   if(result.handoff) {
     const owner=result.contact?.team || 'People Operations'
     const escalation={id:crypto.randomUUID(), userId:user.id, question:req.body.question, owner, createdAt:new Date().toISOString(), status:'open'}
     db.supportEscalations.push(escalation)
     result.escalation={id:escalation.id,owner,status:escalation.status}
   }
-  saveDb(db); res.json(result)
+  await saveDb(db); res.json(result)
 })
-app.post('/api/handoffs', (req,res)=>{
-  const db=loadDb(); const {userId,question,category='General onboarding'}=req.body || {}
+app.post('/api/handoffs', async (req,res)=>{
+  const db=await loadDb(); const {userId,question,category='General onboarding'}=req.body || {}
   const user=db.users.find(u=>u.id===userId)
   if(!user || !String(question||'').trim()) return res.status(400).json({error:'A user and question are required'})
   const owner=category.toLowerCase().includes('security') ? 'Security Team' : category.toLowerCase().includes('it') ? 'IT Service Desk' : 'People Operations'
   const escalation={id:crypto.randomUUID(),userId:user.id,question:question.trim(),category,owner,createdAt:new Date().toISOString(),status:'open'}
-  db.supportEscalations.push(escalation); saveDb(db)
+  db.supportEscalations.push(escalation); await saveDb(db)
   res.status(201).json({escalation})
 })
-app.post('/api/admin/tasks', (req,res)=>{
-  const db=loadDb(); const task={id:`t-${crypto.randomUUID().slice(0,8)}`,...req.body}; db.tasks.push(task); saveDb(db); res.json(task)
+app.post('/api/admin/tasks', async (req,res)=>{
+  const db=await loadDb(); const task={id:`t-${crypto.randomUUID().slice(0,8)}`,...req.body}; db.tasks.push(task); await saveDb(db); res.json(task)
 })
-app.put('/api/admin/tasks/:id',(req,res)=>{ const db=loadDb(); const t=db.tasks.find(x=>x.id===req.params.id); if(!t) return res.status(404).json({error:'Task not found'}); Object.assign(t,req.body); saveDb(db); res.json(t) })
-app.get('/api/admin/analytics',(req,res)=>{
-  const db=loadDb();
+app.put('/api/admin/tasks/:id', async (req,res)=>{ const db=await loadDb(); const t=db.tasks.find(x=>x.id===req.params.id); if(!t) return res.status(404).json({error:'Task not found'}); Object.assign(t,req.body); await saveDb(db); res.json(t) })
+app.get('/api/admin/analytics', async (req,res)=>{
+  const db=await loadDb();
   const employeeRows=db.users.map(u=>{ const plan=getPlan(db,u); const total=plan.length; const done=plan.filter(t=>t.status==='complete').length; const blocked=plan.filter(t=>t.status==='blocked').length; return {id:u.id,name:u.name,role:u.role,location:u.location,progress:total?Math.round(done/total*100):0,blocked,status:u.status,done,total} })
   const countByTask={}; db.taskProgress.forEach(p=>{ if(p.status==='pending'||p.status==='blocked') countByTask[p.taskId]=(countByTask[p.taskId]||0)+1 })
   const topMissed=Object.entries(countByTask).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([id,count])=>({title:db.tasks.find(t=>t.id===id)?.title||id,count}))
   const avg=employeeRows.length?Math.round(employeeRows.reduce((s,x)=>s+x.progress,0)/employeeRows.length):0
   res.json({employees:employeeRows, completionRate:avg, topMissed, blockers:employeeRows.filter(x=>x.blocked>0).length, escalations:db.supportEscalations.filter(x=>x.status==='open').length, byDay:[{day:'Day 1',value:78},{day:'Day 2',value:62},{day:'Day 3',value:45},{day:'Day 4',value:28},{day:'Day 5',value:15}]})
+})
+
+app.use((error, req, res, next) => {
+  console.error('API request failed:', error.message)
+  if (res.headersSent) return next(error)
+  const status = error.message === 'Persistent database is not configured' ? 503 : 500
+  res.status(status).json({ error: status === 503 ? 'Persistent storage is not configured yet.' : 'The onboarding service could not complete this request.' })
 })
 
 module.exports = app
