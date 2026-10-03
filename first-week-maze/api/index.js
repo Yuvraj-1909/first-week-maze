@@ -17,7 +17,8 @@ const USE_REMOTE_DB = Boolean(SUPABASE_URL && SUPABASE_SECRET)
 async function loadDb() {
   if (!USE_REMOTE_DB) return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'))
   const base = SUPABASE_URL.replace(/\/$/, '')
-  const headers = { apikey: SUPABASE_SECRET, Authorization: `Bearer ${SUPABASE_SECRET}` }
+  const headers = { apikey: SUPABASE_SECRET }
+  if (SUPABASE_SECRET.startsWith('eyJ')) headers.Authorization = `Bearer ${SUPABASE_SECRET}`
   const response = await fetch(`${base}/rest/v1/app_state?id=eq.main&select=payload`, { headers })
   if (!response.ok) throw new Error('Could not read app data store')
   const rows = await response.json()
@@ -39,7 +40,7 @@ async function saveDb(db) {
     method: 'POST',
     headers: {
       apikey: SUPABASE_SECRET,
-      Authorization: `Bearer ${SUPABASE_SECRET}`,
+      ...(SUPABASE_SECRET.startsWith('eyJ') ? { Authorization: `Bearer ${SUPABASE_SECRET}` } : {}),
       'Content-Type': 'application/json',
       Prefer: 'resolution=merge-duplicates,return=minimal'
     },
