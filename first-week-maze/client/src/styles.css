@@ -101,3 +101,17 @@ body{background:radial-gradient(ellipse at 84% 0%,rgba(124,93,255,.20),transpare
 .handoffStatus{height:max-content;padding:4px 7px;border-radius:999px;background:rgba(246,201,105,.1);color:#f6ce7a;font-size:8px;text-transform:uppercase}
 .handoffDetails{min-width:0}.handoffDetails b{font-size:10px}.handoffDetails p{font-size:10px;color:#a2aec8;line-height:1.5;margin:5px 0;overflow-wrap:anywhere}.handoffDetails small{font-size:8px;color:#78849f}
 @media(max-width:900px){.helpGrid{grid-template-columns:1fr}}
+
+.checklistPage{display:grid;gap:16px}
+.checklistPageHero{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:24px}
+.checklistPageHero h2{font-size:25px;letter-spacing:-.04em;margin:7px 0}
+.checklistPageHero p{color:var(--muted);font-size:12px;line-height:1.55;margin:0;max-width:600px}
+.checklistPageProgress{display:grid;gap:4px;min-width:190px;padding:15px 17px;border:1px solid var(--line);border-radius:13px;background:rgba(8,12,24,.55)}
+.checklistPageProgress strong{font-size:27px;letter-spacing:-.04em}
+.checklistPageProgress span{color:#8490ab;font-size:10px}
+.checklistFullCard{min-width:0}
+.checklistCount{color:#9da9c4;font-size:10px}
+.checklistEmpty{display:grid;gap:5px;padding:28px 14px;border:1px dashed var(--line);border-radius:12px;color:#dfe5f7;font-size:12px}
+.checklistEmpty span{color:var(--muted);font-size:10px}
+.check:disabled{cursor:not-allowed;opacity:.48}
+@media(max-width:760px){.checklistPageHero{align-items:stretch;flex-direction:column;gap:16px}.checklistPageProgress{min-width:0}}

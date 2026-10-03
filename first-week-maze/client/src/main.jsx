@@ -78,7 +78,7 @@ function App(){
         <div className="profileMini"><div className="avatar">{user.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div><div><b>{user.name}</b><span>{user.role} · {user.department}</span><span>{user.location}</span></div></div><button className="profileChange" onClick={changeProfile}>Change employee profile</button>
         <nav>
           <button type="button" className={`navItem ${page==='overview'?'active':''}`} onClick={()=>setPage('overview')}><Icon>⌂</Icon> Overview</button>
-          <a className="navItem"><Icon>✓</Icon> My checklist <span className="count">{stats.left}</span></a>
+          <button type="button" className={`navItem ${page==='checklist'?'active':''}`} onClick={()=>setPage('checklist')} aria-current={page==='checklist'?'page':undefined}><Icon>✓</Icon> My checklist <span className="count">{stats.left}</span></button>
           <button type="button" className={`navItem ${page==='knowledge'?'active':''}`} onClick={()=>setPage('knowledge')}><Icon>◌</Icon> Knowledge base</button>
           <button type="button" className={`navItem ${page==='help'?'active':''}`} onClick={()=>setPage('help')}><Icon>?</Icon> Help & handoff</button>
         </nav>
@@ -89,8 +89,8 @@ function App(){
 
     <main className="main">
 
-      <header className="topbar"><div><div className="eyebrow">{mode==='employee'?'EMPLOYEE WORKSPACE':'PEOPLE OPERATIONS'}</div><h1>{mode==='employee'?(page==='knowledge'?'Knowledge base, made searchable.':page==='help'?'Get help with a clear handoff.':'Your first week, without the maze.'):'Onboarding health at a glance.'}</h1></div><div className="topActions">{mode==='employee'&&page==='overview'&&<button className="ghost" onClick={()=>setShowGenerator(true)}>✦ Personalize</button>}<button className="ghost mobileDemo" onClick={changeProfile}>Change profile</button><div className="notif">◔<span></span></div><div className="avatar small">{user.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div></div></header>
-      {mode==='employee'?(page==='knowledge'?<KnowledgeBaseView onBack={()=>setPage('overview')}/>:page==='help'?<HelpHandoffView userId={userId} user={user}/>:<EmployeeView {...{user,plan,stats,days,filtered,filter,setFilter,search,setSearch,toggleTask,scheduleReminder,assistantOpen,setAssistantOpen,messages,typing,question,setQuestion,askAssistant,showGenerator,setShowGenerator,profileForm,setProfileForm,generate}}/>):<AdminView admin={admin} onRefresh={loadAdmin}/>} 
+      <header className="topbar"><div><div className="eyebrow">{mode==='employee'?'EMPLOYEE WORKSPACE':'PEOPLE OPERATIONS'}</div><h1>{mode==='employee'?(page==='knowledge'?'Knowledge base, made searchable.':page==='help'?'Get help with a clear handoff.':page==='checklist'?'Your first-week checklist.':'Your first week, without the maze.'):'Onboarding health at a glance.'}</h1></div><div className="topActions">{mode==='employee'&&page==='overview'&&<button className="ghost" onClick={()=>setShowGenerator(true)}>✦ Personalize</button>}<button className="ghost mobileDemo" onClick={changeProfile}>Change profile</button><div className="notif">◔<span></span></div><div className="avatar small">{user.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div></div></header>
+      {mode==='employee'?(page==='knowledge'?<KnowledgeBaseView onBack={()=>setPage('overview')}/>:page==='help'?<HelpHandoffView userId={userId} user={user}/>:page==='checklist'?<ChecklistView {...{user,plan,stats,days,filtered,filter,setFilter,search,setSearch,toggleTask,scheduleReminder}}/>:<EmployeeView {...{user,plan,stats,days,filtered,filter,setFilter,search,setSearch,toggleTask,scheduleReminder,assistantOpen,setAssistantOpen,messages,typing,question,setQuestion,askAssistant,showGenerator,setShowGenerator,profileForm,setProfileForm,generate}}/>):<AdminView admin={admin} onRefresh={loadAdmin}/>} 
     </main>
     {toast && <div className="toast">{toast}</div>}
   </div>
@@ -155,6 +155,34 @@ function EmployeeView({user,plan,stats,days,filtered,filter,setFilter,search,set
     </section>
     {showGenerator&&<GeneratorModal {...{profileForm,setProfileForm,generate,setShowGenerator}}/>}
   </>
+}
+
+function ChecklistView({user,plan,stats,days,filtered,filter,setFilter,search,setSearch,toggleTask,scheduleReminder}){
+  return <section className="checklistPage">
+    <div className="checklistPageHero card">
+      <div>
+        <div className="cardKicker">YOUR FIRST-WEEK JOURNEY</div>
+        <h2>Every next step, in one place.</h2>
+        <p>Search your assigned tasks, filter by priority, and update your progress as you go.</p>
+      </div>
+      <div className="checklistPageProgress">
+        <strong>{stats.pct}%</strong>
+        <span>{stats.done} of {stats.total} tasks complete</span>
+        <span>{stats.left} remaining · {stats.blocked} blocked</span>
+      </div>
+    </div>
+    <section className="checklistCard checklistFullCard card">
+      <div className="sectionHead">
+        <div><div className="cardKicker">PERSONALIZED FOR {user.name.toUpperCase()}</div><h3>First-week checklist</h3></div>
+        <span className="checklistCount">{stats.done}/{stats.total} complete</span>
+      </div>
+      <div className="filters">
+        <label className="search"><span>⌕</span><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search tasks…" aria-label="Search checklist tasks"/></label>
+        <div className="segmented" aria-label="Filter tasks by priority">{['All','High','Medium','Low'].map(value=><button type="button" key={value} onClick={()=>setFilter(value)} className={filter===value?'active':''} aria-pressed={filter===value}>{value}</button>)}</div>
+      </div>
+      {filtered.length===0?<div className="checklistEmpty"><strong>No tasks match those filters.</strong><span>Clear the search or choose “All” to see your assigned tasks.</span></div>:<div className="timeline">{days.map(day=>{const tasks=filtered.filter(task=>task.day===day); if(!tasks.length)return null; return <div className="dayBlock" key={day}><div className="dayRail"><div className="dayDot">{day}</div>{day<5&&<div className="dayLine"></div>}</div><div className="dayBody"><div className="dayTitle"><span>DAY {day}</span><small>{tasks.filter(task=>task.status==='complete').length}/{tasks.length} done</small></div>{tasks.map(task=><TaskRow key={task.id} task={task} onToggle={()=>toggleTask(task)} onRemind={()=>scheduleReminder(task)}/>)}</div></div>})}</div>}
+    </section>
+  </section>
 }
 
 function HelpHandoffView({userId,user}){
@@ -317,7 +345,7 @@ function KnowledgeBaseView({onBack}){
 }
 
 function Stat({label,value,sub,icon,danger}){return <div className={`stat ${danger?'danger':''}`}><div className="statIcon">{icon}</div><div><div className="statValue">{value}</div><div className="statLabel">{label}</div><small>{sub}</small></div></div>}
-function TaskRow({task,onToggle,onRemind}){const done=task.status==='complete'; return <div className={`taskRow ${done?'done':''} ${task.status==='blocked'?'blocked':''}`}><button className="check" onClick={onToggle}>{done?'✓':''}</button><div className="taskMain"><div className="taskTitle">{task.title}<span className={`priority ${task.priority.toLowerCase()}`}>{task.priority}</span>{task.required&&<span className="required">Required</span>}</div><p>{task.description}</p><div className="taskMeta"><span>◷ {task.estimatedMinutes} min</span><span>▣ {task.owner}</span><span>↗ {task.source} · {task.section}</span>{task.dependency&&<span className="dependency">⛓ Depends on: {task.dependency}</span>}{task.reminder&&<span className="reminder">◔ Reminder scheduled</span>}</div></div>{!done&&!task.reminder&&<button className="taskRemind" onClick={onRemind}>Remind</button>}<a href={task.link} target="_blank" className="taskLink" onClick={e=>{if(task.link.includes('example'))e.preventDefault()}}>Open ↗</a></div>}
+function TaskRow({task,onToggle,onRemind}){const done=task.status==='complete'; return <div className={`taskRow ${done?'done':''} ${task.status==='blocked'?'blocked':''}`}><button type="button" className="check" onClick={onToggle} disabled={task.status==='blocked'} aria-label={done?`Reopen ${task.title}`:`Complete ${task.title}`} aria-pressed={done} title={task.status==='blocked'?'Complete the prerequisite first':undefined}>{done?'✓':''}</button><div className="taskMain"><div className="taskTitle">{task.title}<span className={`priority ${task.priority.toLowerCase()}`}>{task.priority}</span>{task.required&&<span className="required">Required</span>}</div><p>{task.description}</p><div className="taskMeta"><span>◷ {task.estimatedMinutes} min</span><span>▣ {task.owner}</span><span>↗ {task.source} · {task.section}</span>{task.dependency&&<span className="dependency">⛓ Depends on: {task.dependency}</span>}{task.reminder&&<span className="reminder">◔ Reminder scheduled</span>}</div></div>{!done&&!task.reminder&&<button className="taskRemind" onClick={onRemind}>Remind</button>}<a href={task.link} target="_blank" className="taskLink" onClick={e=>{if(task.link.includes('example'))e.preventDefault()}}>Open ↗</a></div>}
 function ChatMessage({m}){return <div className={`chatMsg ${m.role==='user'?'userMsg':''}`}><div className="msgAvatar">{m.role==='user'?'AM':'✦'}</div><div><div className="msgText">{m.text}</div>{m.source&&<div className="citation"><b>{m.aiUsed?'AI-assisted answer · source support':'Knowledge-base answer · source'}</b><span>{m.source.title} · {m.source.section}</span><small>{m.source.text}</small></div>}{m.contact&&<div className="contactMini">Contact: <b>{m.contact.name}</b> · {m.contact.team} · {m.contact.email}</div>}{m.handoff&&<div className="handoff">⚑ Human handoff opened{m.escalation?.owner?` — owned by ${m.escalation.owner}`:''}</div>}</div></div>}
 function GeneratorModal({profileForm,setProfileForm,generate,setShowGenerator}){const update=(k,v)=>setProfileForm(p=>({...p,[k]:v})); return <div className="modalBackdrop"><div className="modal"><div className="modalTop"><div><div className="cardKicker">PERSONALIZATION ENGINE</div><h3>Build your first-week path</h3><p>These profile signals control which verified tasks appear in the journey.</p></div><button className="closeBtn" onClick={()=>setShowGenerator(false)}>×</button></div><div className="formGrid"><label>Full name<input value={profileForm.name} onChange={e=>update('name',e.target.value)}/></label><label>Role<select value={profileForm.role} onChange={e=>update('role',e.target.value)}><option>Software Engineer</option><option>Product Manager</option><option>HR Executive</option></select></label><label>Department<input value={profileForm.department} onChange={e=>update('department',e.target.value)}/></label><label>Location<select value={profileForm.location} onChange={e=>update('location',e.target.value)}><option>Noida</option><option>Mumbai</option></select></label><label>Joining date<input type="date" value={profileForm.joiningDate} onChange={e=>update('joiningDate',e.target.value)}/></label><label>Experience<select value={profileForm.experience} onChange={e=>update('experience',e.target.value)}><option>Early career</option><option>Experienced</option></select></label></div><div className="modalPreview"><span>Preview</span><div>{profileForm.role} · {profileForm.department} · {profileForm.location}</div><small>The checklist and assistant answers will adapt to this profile.</small></div><div className="modalActions"><button className="ghost" onClick={()=>setShowGenerator(false)}>Cancel</button><button className="primary" onClick={generate}>Generate personalized week →</button></div></div></div>}
 
