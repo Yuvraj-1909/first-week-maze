@@ -16,6 +16,7 @@ const Icon = ({children, className=''}) => <span className={`icon ${className}`}
 
 function App(){
   const [mode,setMode]=useState('employee')
+  const [page,setPage]=useState('overview')
   const [userId,setUserId]=useState(()=>window.localStorage.getItem('fw-user-id') || '')
   const [user,setUser]=useState(null)
   const [plan,setPlan]=useState([])
@@ -76,9 +77,9 @@ function App(){
       {mode==='employee' && <>
         <div className="profileMini"><div className="avatar">{user.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div><div><b>{user.name}</b><span>{user.role} · {user.department}</span><span>{user.location}</span></div></div><button className="profileChange" onClick={changeProfile}>Change employee profile</button>
         <nav>
-          <a className="navItem active"><Icon>⌂</Icon> Overview</a>
+          <button type="button" className={`navItem ${page==='overview'?'active':''}`} onClick={()=>setPage('overview')}><Icon>⌂</Icon> Overview</button>
           <a className="navItem"><Icon>✓</Icon> My checklist <span className="count">{stats.left}</span></a>
-          <a className="navItem"><Icon>◌</Icon> Knowledge base</a>
+          <button type="button" className={`navItem ${page==='knowledge'?'active':''}`} onClick={()=>setPage('knowledge')}><Icon>◌</Icon> Knowledge base</button>
           <a className="navItem"><Icon>?</Icon> Help & handoff</a>
         </nav>
         <div className="sidebarTip"><div className="tipDot">✦</div><div><b>Onboarding principle</b><p>What to do. How to do it. Who to contact.</p></div></div>
@@ -88,8 +89,8 @@ function App(){
 
     <main className="main">
 
-      <header className="topbar"><div><div className="eyebrow">{mode==='employee'?'EMPLOYEE WORKSPACE':'PEOPLE OPERATIONS'}</div><h1>{mode==='employee'?'Your first week, without the maze.':'Onboarding health at a glance.'}</h1></div><div className="topActions"><button className="ghost" onClick={()=>setShowGenerator(true)}>✦ Personalize</button><button className="ghost mobileDemo" onClick={changeProfile}>Change profile</button><div className="notif">◔<span></span></div><div className="avatar small">{user.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div></div></header>
-      {mode==='employee'?<EmployeeView {...{user,plan,stats,days,filtered,filter,setFilter,search,setSearch,toggleTask,scheduleReminder,assistantOpen,setAssistantOpen,messages,typing,question,setQuestion,askAssistant,showGenerator,setShowGenerator,profileForm,setProfileForm,generate}}/>:<AdminView admin={admin} onRefresh={loadAdmin}/>} 
+      <header className="topbar"><div><div className="eyebrow">{mode==='employee'?'EMPLOYEE WORKSPACE':'PEOPLE OPERATIONS'}</div><h1>{mode==='employee'?(page==='knowledge'?'Knowledge base, made searchable.':'Your first week, without the maze.'):'Onboarding health at a glance.'}</h1></div><div className="topActions"><button className="ghost" onClick={()=>setShowGenerator(true)}>✦ Personalize</button><button className="ghost mobileDemo" onClick={changeProfile}>Change profile</button><div className="notif">◔<span></span></div><div className="avatar small">{user.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div></div></header>
+      {mode==='employee'?(page==='knowledge'?<KnowledgeBaseView/>:<EmployeeView {...{user,plan,stats,days,filtered,filter,setFilter,search,setSearch,toggleTask,scheduleReminder,assistantOpen,setAssistantOpen,messages,typing,question,setQuestion,askAssistant,showGenerator,setShowGenerator,profileForm,setProfileForm,generate}}/>):<AdminView admin={admin} onRefresh={loadAdmin}/>} 
     </main>
     {toast && <div className="toast">{toast}</div>}
   </div>
@@ -154,6 +155,64 @@ function EmployeeView({user,plan,stats,days,filtered,filter,setFilter,search,set
     </section>
     {showGenerator&&<GeneratorModal {...{profileForm,setProfileForm,generate,setShowGenerator}}/>}
   </>
+}
+
+function KnowledgeBaseView(){
+  const [documents,setDocuments]=useState([])
+  const [loading,setLoading]=useState(true)
+  const [error,setError]=useState('')
+  const [query,setQuery]=useState('')
+  const [tag,setTag]=useState('All')
+
+  useEffect(()=>{
+    let active=true
+    setLoading(true)
+    setError('')
+    request('/knowledge')
+      .then(data=>{ if(active) setDocuments(Array.isArray(data.documents)?data.documents:[]) })
+      .catch(err=>{ if(active) setError(err.message || 'Could not load onboarding sources.') })
+      .finally(()=>{ if(active) setLoading(false) })
+    return ()=>{ active=false }
+  },[])
+
+  const tags=[...new Set(documents.flatMap(doc=>Array.isArray(doc.tags)?doc.tags:[]))].sort()
+  const term=query.trim().toLowerCase()
+  const filtered=documents.filter(doc=>{
+    const matchesTag=tag==='All' || (doc.tags||[]).includes(tag)
+    const searchable=`${doc.title} ${doc.section} ${doc.text} ${(doc.tags||[]).join(' ')}`.toLowerCase()
+    return matchesTag && (!term || searchable.includes(term))
+  })
+
+  return <section className="knowledgePage">
+    <div className="knowledgeHero card">
+      <div>
+        <div className="cardKicker">ONBOARDING SOURCE LIBRARY</div>
+        <h2>Find the guidance behind your first week.</h2>
+        <p>Search the same stored onboarding sources that support the assistant’s answers.</p>
+      </div>
+      <div className="knowledgeBadge"><strong>{documents.length}</strong><span>sources</span></div>
+    </div>
+    <div className="knowledgeControls card">
+      <label className="search knowledgeSearch"><span>⌕</span><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search titles, sections, guidance, or tags…" aria-label="Search knowledge sources"/></label>
+      <div className="knowledgeTags" aria-label="Filter sources by tag">
+        <button type="button" className={tag==='All'?'active':''} onClick={()=>setTag('All')}>All topics</button>
+        {tags.map(item=><button type="button" key={item} className={tag===item?'active':''} onClick={()=>setTag(item)}>{item}</button>)}
+      </div>
+      <div className="knowledgeMeta">{loading?'Loading sources…':error?'':`Showing ${filtered.length} of ${documents.length} sources`}</div>
+    </div>
+    {error&&<div className="knowledgeNotice" role="alert">Couldn’t load the source library: {error}. Refresh the page and try again.</div>}
+    {!loading&&!error&&filtered.length===0&&<div className="knowledgeEmpty card"><strong>No matching sources</strong><span>Try a different word or choose “All topics”.</span></div>}
+    <div className="knowledgeGrid">
+      {filtered.map(doc=><article className="knowledgeDoc card" key={doc.id}>
+        <div className="knowledgeDocTop"><span className="knowledgeDocIcon">▤</span><span className="knowledgeDocLabel">SOURCE</span></div>
+        <h3>{doc.title}</h3>
+        <div className="knowledgeSection">{doc.section}</div>
+        <p>{doc.text}</p>
+        <div className="knowledgeDocTags">{(doc.tags||[]).map(item=><span key={item}>{item}</span>)}</div>
+      </article>)}
+    </div>
+    <div className="knowledgeDemoNote">Demo content: replace these examples with your organization’s verified onboarding material before using the app with real employees.</div>
+  </section>
 }
 
 function Stat({label,value,sub,icon,danger}){return <div className={`stat ${danger?'danger':''}`}><div className="statIcon">{icon}</div><div><div className="statValue">{value}</div><div className="statLabel">{label}</div><small>{sub}</small></div></div>}
