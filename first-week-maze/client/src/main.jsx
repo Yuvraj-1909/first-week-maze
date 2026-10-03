@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './styles.css'
 
 const API = '/api'
+const emptyProfile = () => ({name:'',role:'',department:'',location:'',joiningDate:new Date().toISOString().slice(0,10),experience:'Early career'})
 
 async function request(path, options) {
   const response = await fetch(`${API}${path}`, options)
@@ -15,23 +16,25 @@ const Icon = ({children, className=''}) => <span className={`icon ${className}`}
 
 function App(){
   const [mode,setMode]=useState('employee')
-  const [userId,setUserId]=useState('u1')
+  const [userId,setUserId]=useState(()=>window.localStorage.getItem('fw-user-id') || '')
   const [user,setUser]=useState(null)
   const [plan,setPlan]=useState([])
-  const [loading,setLoading]=useState(true)
+  const [loading,setLoading]=useState(()=>Boolean(window.localStorage.getItem('fw-user-id')))
   const [connectionError,setConnectionError]=useState('')
   const [filter,setFilter]=useState('All')
   const [search,setSearch]=useState('')
   const [assistantOpen,setAssistantOpen]=useState(true)
-  const [messages,setMessages]=useState([{role:'assistant',text:'Hi Aarav — I can help you navigate your first week using only verified onboarding information. Try “What should I do today?” or “Why is repository access blocked?”'}])
+  const [messages,setMessages]=useState([{role:'assistant',text:'Hi! I can help you navigate your first week using verified onboarding information. Try “What should I do today?” or “Who is my HR contact?”'}])
   const [question,setQuestion]=useState('')
   const [typing,setTyping]=useState(false)
   const [showGenerator,setShowGenerator]=useState(false)
-  const [profileForm,setProfileForm]=useState({name:'Aarav Mehta',role:'Software Engineer',department:'Backend Engineering',location:'Noida',joiningDate:'2026-09-15',experience:'Early career'})
+  const [profileForm,setProfileForm]=useState(emptyProfile)
   const [toast,setToast]=useState(null)
   const [admin,setAdmin]=useState(null)
+  const [profileError,setProfileError]=useState('')
+  const [generating,setGenerating]=useState(false)
   
-  useEffect(()=>{ loadUser(userId) },[userId])
+  useEffect(()=>{ if(userId) loadUser(userId); else { setLoading(false); setUser(null); setPlan([]) } },[userId])
   useEffect(()=>{ if(mode==='admin') loadAdmin() },[mode])
   async function loadUser(id){ setLoading(true); setConnectionError(''); try { const d=await request(`/me/${id}`); setUser(d.user); setPlan(d.plan); setProfileForm({name:d.user.name,role:d.user.role,department:d.user.department,location:d.user.location,joiningDate:d.user.joiningDate,experience:d.user.experience}) } catch(error) { setConnectionError(error.message || 'The onboarding service could not be reached.') } finally { setLoading(false) } }
   async function loadAdmin(){ try { setAdmin(await request('/admin/analytics')) } catch(error) { notify(error.message || 'Could not load HR analytics') } }
@@ -46,20 +49,32 @@ function App(){
   }
   async function askAssistant(q=question){ if(!q.trim()) return; const text=q.trim(); setQuestion(''); setMessages(m=>[...m,{role:'user',text}]); setTyping(true); try { const d=await request('/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId,question:text})}); setTimeout(()=>{setMessages(m=>[...m,{role:'assistant',text:d.answer,source:d.source,contact:d.contact,handoff:d.handoff,escalation:d.escalation}]);setTyping(false)},350) } catch(error) { setMessages(m=>[...m,{role:'assistant',text:'I can’t reach the onboarding guide right now. Please try again in a moment.'}]); setTyping(false); notify(error.message || 'Assistant unavailable') } }
   async function generate(){
-    const payload={...profileForm,id:userId,email:user?.email}
-    try { const d=await request('/onboarding/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); setUser(d.user); setPlan(d.plan); setShowGenerator(false); notify('Personalized week generated') } catch(error) { notify(error.message || 'Could not personalize your week') }
+    setProfileError('')
+    setGenerating(true)
+    const payload={...profileForm,id:userId || undefined,email:user?.email}
+    try {
+      const d=await request('/onboarding/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      window.localStorage.setItem('fw-user-id',d.user.id)
+      setUserId(d.user.id); setUser(d.user); setPlan(d.plan); setShowGenerator(false); notify(userId?'Profile and tasks updated':'Your onboarding path is ready')
+    } catch(error) { setProfileError(error.message || 'Could not save your profile') }
+    finally { setGenerating(false) }
+  }
+  function changeProfile(){
+    window.localStorage.removeItem('fw-user-id')
+    setProfileForm(emptyProfile()); setProfileError(''); setUser(null); setPlan([]); setUserId('')
   }
   const stats=useMemo(()=>{ const total=plan.length, done=plan.filter(x=>x.status==='complete').length, blocked=plan.filter(x=>x.status==='blocked').length; const now=new Date(); const overdue=plan.filter(x=>x.status==='pending' && user && (x.day===1 ? now>=new Date(user.joiningDate) : now>new Date(new Date(user.joiningDate).getTime()+(x.day-1)*86400000))); return {total,done,blocked,overdue,pct:total?Math.round(done/total*100):0,left:total-done} },[plan,user])
   const days=[1,2,3,4,5]
   const filtered=plan.filter(t=> (filter==='All'||t.priority===filter) && `${t.title} ${t.description}`.toLowerCase().includes(search.toLowerCase()))
   if(loading) return <div className="boot"><div className="brandMark">FW</div><div>Finding your way into week one…</div></div>
+  if(!userId) return <ProfileSetup profileForm={profileForm} setProfileForm={setProfileForm} onSubmit={generate} error={profileError} loading={generating}/>
   if(connectionError || !user) return <ConnectionScreen error={connectionError} onRetry={()=>loadUser(userId)}/>
   return <div className="app">
     <aside className="sidebar">
       <div className="brand"><div className="brandMark">FW</div><div><div className="brandName">First-Week Maze</div><div className="brandSub">Onboarding Command Center</div></div></div>
       <div className="switcher"><button className={mode==='employee'?'active':''} onClick={()=>setMode('employee')}><Icon>◉</Icon> Employee</button><button className={mode==='admin'?'active':''} onClick={()=>setMode('admin')}><Icon>▦</Icon> HR Admin</button></div>
       {mode==='employee' && <>
-        <div className="profileMini"><div className="avatar">{user.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div><div><b>{user.name}</b><span>{user.role} · {user.location}</span></div></div><div className="demoSelect"><span>DEMO EMPLOYEE</span><select value={userId} onChange={e=>setUserId(e.target.value)}><option value="u1">Aarav · Software Engineer</option><option value="u2">Maya · Product Manager</option><option value="u3">Ishita · HR Executive</option></select></div>
+        <div className="profileMini"><div className="avatar">{user.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div><div><b>{user.name}</b><span>{user.role} · {user.department}</span><span>{user.location}</span></div></div><button className="profileChange" onClick={changeProfile}>Change employee profile</button>
         <nav>
           <a className="navItem active"><Icon>⌂</Icon> Overview</a>
           <a className="navItem"><Icon>✓</Icon> My checklist <span className="count">{stats.left}</span></a>
@@ -73,11 +88,40 @@ function App(){
 
     <main className="main">
 
-      <header className="topbar"><div><div className="eyebrow">{mode==='employee'?'EMPLOYEE WORKSPACE':'PEOPLE OPERATIONS'}</div><h1>{mode==='employee'?'Your first week, without the maze.':'Onboarding health at a glance.'}</h1></div><div className="topActions"><button className="ghost" onClick={()=>setShowGenerator(true)}>✦ Personalize</button><button className="ghost mobileDemo" onClick={()=>setUserId(userId==='u1'?'u3':'u1')}>Demo switch</button><div className="notif">◔<span></span></div><div className="avatar small">{user.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div></div></header>
+      <header className="topbar"><div><div className="eyebrow">{mode==='employee'?'EMPLOYEE WORKSPACE':'PEOPLE OPERATIONS'}</div><h1>{mode==='employee'?'Your first week, without the maze.':'Onboarding health at a glance.'}</h1></div><div className="topActions"><button className="ghost" onClick={()=>setShowGenerator(true)}>✦ Personalize</button><button className="ghost mobileDemo" onClick={changeProfile}>Change profile</button><div className="notif">◔<span></span></div><div className="avatar small">{user.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div></div></header>
       {mode==='employee'?<EmployeeView {...{user,plan,stats,days,filtered,filter,setFilter,search,setSearch,toggleTask,scheduleReminder,assistantOpen,setAssistantOpen,messages,typing,question,setQuestion,askAssistant,showGenerator,setShowGenerator,profileForm,setProfileForm,generate}}/>:<AdminView admin={admin} onRefresh={loadAdmin}/>} 
     </main>
     {toast && <div className="toast">{toast}</div>}
   </div>
+}
+
+function ProfileSetup({profileForm,setProfileForm,onSubmit,error,loading}){
+  const update=(key,value)=>setProfileForm(current=>({...current,[key]:value}))
+  return <main className="connectionScreen profileSetupScreen">
+    <section className="connectionCard profileSetupCard">
+      <div className="brand"><div className="brandMark">FW</div><div><div className="brandName">First-Week Maze</div><div className="brandSub">Onboarding Command Center</div></div></div>
+      <div className="eyebrow">LET’S SET UP YOUR FIRST WEEK</div>
+      <h1>Tell us about your new role.</h1>
+      <p>We’ll use your office, team, job title, and joining date to choose relevant onboarding tasks and help information.</p>
+      <form onSubmit={event=>{event.preventDefault();onSubmit()}}>
+        <div className="formGrid profileFields">
+          <label>Your name<input required maxLength="80" autoComplete="name" value={profileForm.name} onChange={event=>update('name',event.target.value)} placeholder="e.g. Alex Mehta"/></label>
+          <label>Job title / post<input required list="job-title-options" maxLength="80" value={profileForm.role} onChange={event=>update('role',event.target.value)} placeholder="e.g. Software Engineer"/></label>
+          <datalist id="job-title-options"><option value="Software Engineer"/><option value="Product Manager"/><option value="HR Executive"/></datalist>
+          <label>Team / department<input required list="team-options" maxLength="80" value={profileForm.department} onChange={event=>update('department',event.target.value)} placeholder="e.g. Backend Engineering"/></label>
+          <datalist id="team-options"><option value="Backend Engineering"/><option value="Product"/><option value="People Operations"/></datalist>
+          <label>Office location<input required list="office-options" maxLength="80" value={profileForm.location} onChange={event=>update('location',event.target.value)} placeholder="e.g. Noida"/></label>
+          <datalist id="office-options"><option value="Noida"/><option value="Mumbai"/></datalist>
+          <label>Joining date<input required type="date" value={profileForm.joiningDate} onChange={event=>update('joiningDate',event.target.value)}/></label>
+        </div>
+        <small className="profileHint">Suggestions match the sample task library. You can enter other values too; those profiles receive tasks marked for “All”.</small>
+        {error&&<div className="profileError" role="alert">{error}</div>}
+        <button className="primary profileSubmit" type="submit" disabled={loading}>{loading?'Building your path…':'Create my onboarding path →'}</button>
+      </form>
+      <div className="profilePrivacy">Demo setup only · No password or verified account yet · Use fictional information</div>
+    </section>
+    <div className="connectionMaze" aria-hidden="true"><span>01</span><span>02</span><span>03</span><span>04</span><span>05</span></div>
+  </main>
 }
 
 function ConnectionScreen({error,onRetry}) { return <main className="connectionScreen"><div className="connectionCard"><div className="brandMark">FW</div><div className="eyebrow">FIRST-WEEK MAZE · CONNECTION CHECK</div><h1>Your onboarding path is ready.</h1><p>The workspace couldn’t reach its API, so your checklist is waiting to load. Check that the project is deployed with the included <code>vercel.json</code> configuration, then try again.</p><div className="connectionStatus"><span className="statusDot"/> {error || 'Onboarding service unavailable'}</div><button className="primary" onClick={onRetry}>Try again <span>↻</span></button><small>For local preview, start the project with <code>npm run dev</code>.</small></div><div className="connectionMaze" aria-hidden="true"><span>01</span><span>02</span><span>03</span><span>04</span><span>05</span></div></main> }
