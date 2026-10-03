@@ -125,3 +125,55 @@ body{background:radial-gradient(ellipse at 84% 0%,rgba(124,93,255,.20),transpare
   .sidebarClose{display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:#121b31;color:#dfe6fb;font-size:18px;cursor:pointer}
   .sidebarScrim{display:block;position:fixed;z-index:70;inset:0;width:100%;height:100%;padding:0;border:0;background:rgba(2,5,12,.68);cursor:pointer}
 }
+
+/* Readability and accent refinements adapted from the Tanishka reference design. */
+.topbar .eyebrow{color:#68f5ff}
+.stat{padding:22px 18px}
+.statIcon{width:38px;height:38px;font-size:15px}
+.statValue{font-size:24px;font-weight:700}
+.statLabel{font-size:12px;font-weight:700}
+.stat small{font-size:10px;color:#8a96b0}
+.stat:nth-child(1) .statIcon,.stat:nth-child(1) .statLabel{color:#45d38d}
+.stat:nth-child(2) .statIcon,.stat:nth-child(2) .statLabel{color:#9b83ff}
+.stat:nth-child(3) .statIcon,.stat:nth-child(3) .statLabel{color:#ff7081}
+.stat:nth-child(4) .statIcon,.stat:nth-child(4) .statLabel{color:#48e1d0}
+.ring{background:conic-gradient(from -90deg,#8b7cff var(--p),#1d2740 0);box-shadow:0 0 60px rgba(111,91,255,.18)}
+.sectionHead h3,.assistantHead h3,.chartCard h3{font-size:22px}
+.search input,.composer input{font-size:14px}
+.segmented button:nth-child(2){color:#ff9ca8;background:rgba(255,112,129,.08)}
+.segmented button:nth-child(3){color:#f6ce7a;background:rgba(246,201,105,.08)}
+.segmented button:nth-child(4){color:#8ee4be;background:rgba(69,211,141,.08)}
+.taskTitle{font-size:17px}
+.taskMain p{color:#9aa6c0;font-size:14px;line-height:1.5;margin:6px 0 8px}
+.taskMeta{font-size:11px}
+.assistantCard input,.assistantCard input::placeholder{font-size:14px}
+.assistantCard button{font-size:13px}
+.assistantCard .chips button{font-size:11px}
+.nudge{gap:12px;border-radius:12px;padding:10px 14px;margin:16px 0 12px;min-height:48px}
+.nudgeIcon{width:34px;height:34px;border-radius:9px;font-size:22px}
+.nudge b{font-size:14px}
+.nudge span{font-size:11px;margin-top:4px}
+.employeeTable th,.employeeTable td{font-size:12px;padding:13px 7px}
+.employeeTable th{font-size:10px}
+.employeeTable small{font-size:10px}
+.alertTag,.okTag{font-size:10px}
+.rank{font-size:11px}
+.rankList b{font-size:13px}
+.rankList small{font-size:10px}
+@media(min-width:761px){.heroGrid{grid-template-columns:minmax(0,1.25fr) minmax(310px,.9fr)}}
+@media(max-width:760px){
+  .stat{padding:13px 12px}
+  .statIcon{width:34px;height:34px;font-size:13px}
+  .statValue{font-size:21px}
+  .statLabel{font-size:11px}
+  .stat small{font-size:9px}
+  .sectionHead h3,.assistantHead h3,.chartCard h3{font-size:18px}
+  .search input,.composer input{font-size:12px}
+  .taskTitle{font-size:14px}
+  .taskMain p{font-size:12px}
+  .taskMeta{font-size:9px}
+  .nudge{margin:0 0 15px;padding:10px}
+  .nudgeIcon{width:28px;height:28px;font-size:18px}
+  .nudge b{font-size:11px}
+  .nudge span{font-size:9px}
+}
