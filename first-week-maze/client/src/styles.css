@@ -70,3 +70,34 @@ body{background:radial-gradient(ellipse at 84% 0%,rgba(124,93,255,.20),transpare
 @media(max-width:760px){.knowledgeGrid{grid-template-columns:1fr}.knowledgeHero{padding:19px}.knowledgeHero h2{font-size:20px}}
 
 .knowledgeBack{margin-top:14px}
+
+.helpPage{display:grid;gap:14px}
+.helpHero{padding:24px 26px;background:linear-gradient(135deg,rgba(139,124,255,.14),rgba(69,212,255,.06))}
+.helpHero h2{font-size:24px;letter-spacing:-.04em;margin:8px 0}
+.helpHero p{font-size:12px;line-height:1.6;color:var(--muted);margin:0}
+.helpGrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:14px;align-items:start}
+.helpForm h3,.helpContacts h3,.helpHistory h3{font-size:17px;letter-spacing:-.03em;margin:6px 0 16px}
+.helpForm form{display:grid;gap:12px}
+.helpForm label{display:grid;gap:6px;color:#8f9ab5;font-size:10px}
+.helpForm select,.helpForm textarea{width:100%;border:1px solid var(--line);border-radius:10px;background:#0a1020;color:#e7ecfb;padding:10px;font:inherit;font-size:11px;outline:none}
+.helpForm textarea{resize:vertical;line-height:1.5;min-height:110px}
+.helpForm select:focus,.helpForm textarea:focus{border-color:rgba(139,124,255,.7)}
+.helpFormMeta,.helpSubtle,.helpEmpty{font-size:9px;color:#77839f}
+.helpForm .primary{justify-self:start}
+.helpError{padding:10px;border-radius:9px;border:1px solid rgba(255,112,129,.25);background:rgba(255,112,129,.07);color:#ffacb5;font-size:10px}
+.helpSuccess{display:grid;gap:5px;padding:12px;margin-top:13px;border:1px solid rgba(69,211,141,.25);border-radius:10px;background:rgba(69,211,141,.07);color:#b5f2d3;font-size:10px;overflow-wrap:anywhere}
+.helpSuccess strong{font-size:12px}
+.helpDemoNote{border-top:1px solid var(--line);padding-top:12px;margin-top:15px;color:#7985a0;font-size:9px;line-height:1.6}
+.buddyCard{display:flex;gap:10px;align-items:center;padding:11px;background:#0b1120;border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
+.buddyIcon{width:28px;height:28px;display:grid;place-items:center;border-radius:8px;background:#1b2540;color:#a99cff}
+.buddyCard b,.buddyCard small{display:block}.buddyCard b{font-size:11px}.buddyCard small{font-size:9px;color:#78849f;margin-top:3px}
+.contactList{display:grid;gap:7px}
+.helpContact{padding:10px;border:1px solid var(--line);border-radius:9px;background:rgba(11,17,32,.7)}
+.helpContact b,.helpContact span{display:block}.helpContact b{font-size:10px}.helpContact span,.helpContact small{font-size:9px;color:#7d89a3;margin-top:3px}
+.helpContact small{display:block;overflow-wrap:anywhere}
+.helpCount{background:#1b2540;color:#aeb9d6;border-radius:999px;padding:4px 8px;font-size:9px}
+.handoffList{display:grid;gap:8px}
+.handoffRow{display:flex;gap:11px;padding:12px;border:1px solid var(--line);border-radius:10px;background:rgba(11,17,32,.7)}
+.handoffStatus{height:max-content;padding:4px 7px;border-radius:999px;background:rgba(246,201,105,.1);color:#f6ce7a;font-size:8px;text-transform:uppercase}
+.handoffDetails{min-width:0}.handoffDetails b{font-size:10px}.handoffDetails p{font-size:10px;color:#a2aec8;line-height:1.5;margin:5px 0;overflow-wrap:anywhere}.handoffDetails small{font-size:8px;color:#78849f}
+@media(max-width:900px){.helpGrid{grid-template-columns:1fr}}

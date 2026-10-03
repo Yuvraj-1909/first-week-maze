@@ -45,6 +45,8 @@ The UI starts on `u1`; use the Personalize button to generate a different profil
 ## API overview
 
 - `GET /api/knowledge` — searchable onboarding source documents and tags
+- `GET /api/handoffs/:userId` — that demo profile’s recent handoffs and support contacts
+- `POST /api/handoffs` — validate, assign, and save a help request
 - `GET /api/users` — demo users
 - `GET /api/me/:id` — profile + personalized checklist
 - `POST /api/onboarding/generate` — generate/update personalized week

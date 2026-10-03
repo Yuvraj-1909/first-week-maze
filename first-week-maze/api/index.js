@@ -251,14 +251,41 @@ app.post('/api/assistant', async (req,res)=>{
   }
   await saveDb(db); res.json(result)
 })
-app.post('/api/handoffs', async (req,res)=>{
-  const db=await loadDb(); const {userId,question,category='General onboarding'}=req.body || {}
-  const user=db.users.find(u=>u.id===userId)
-  if(!user || !String(question||'').trim()) return res.status(400).json({error:'A user and question are required'})
-  const owner=category.toLowerCase().includes('security') ? 'Security Team' : category.toLowerCase().includes('it') ? 'IT Service Desk' : 'People Operations'
-  const escalation={id:crypto.randomUUID(),userId:user.id,question:question.trim(),category,owner,createdAt:new Date().toISOString(),status:'open'}
-  db.supportEscalations.push(escalation); await saveDb(db)
-  res.status(201).json({escalation})
+app.get('/api/handoffs/:userId', async (req,res,next)=>{
+  try {
+    const db=await loadDb()
+    const user=db.users.find(u=>u.id===req.params.userId)
+    if(!user) return res.status(404).json({error:'User not found'})
+    const handoffs=(db.supportEscalations || [])
+      .filter(item=>item.userId===user.id)
+      .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))
+      .slice(0,20)
+    res.set('Cache-Control','no-store')
+    res.json({handoffs,contacts:db.contacts || [],buddy:user.buddy || null})
+  } catch(error) {
+    next(error)
+  }
+})
+app.post('/api/handoffs', async (req,res,next)=>{
+  try {
+    const db=await loadDb()
+    const {userId,question,category='General onboarding'}=req.body || {}
+    const user=db.users.find(u=>u.id===userId)
+    const cleanQuestion=typeof question==='string'?question.trim():''
+    const categories=['General onboarding','People Operations','IT Service Desk','Security Team','Backend Platform','Product Leadership','Workplace Services']
+    if(!user || cleanQuestion.length<5) return res.status(400).json({error:'A valid user and question of at least 5 characters are required'})
+    if(cleanQuestion.length>1000) return res.status(400).json({error:'Please keep the question under 1000 characters'})
+    if(!categories.includes(category)) return res.status(400).json({error:'Choose a support team from the list'})
+    const owner=category==='General onboarding'?'People Operations':category
+    const escalation={id:crypto.randomUUID(),userId:user.id,question:cleanQuestion,category,owner,createdAt:new Date().toISOString(),status:'open'}
+    if(!db.supportEscalations) db.supportEscalations=[]
+    db.supportEscalations.push(escalation)
+    await saveDb(db)
+    const contact=(db.contacts || []).find(item=>item.team===owner) || null
+    res.status(201).json({escalation,contact})
+  } catch(error) {
+    next(error)
+  }
 })
 app.post('/api/admin/tasks', async (req,res)=>{
   const db=await loadDb(); const task={id:`t-${crypto.randomUUID().slice(0,8)}`,...req.body}; db.tasks.push(task); await saveDb(db); res.json(task)
