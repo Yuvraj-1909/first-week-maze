@@ -38,3 +38,33 @@ body{background:radial-gradient(ellipse at 84% 0%,rgba(124,93,255,.20),transpare
 .profileChange{margin:0 20px 20px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:transparent;color:#929fba;font-size:10px;cursor:pointer}
 .profileChange:hover{color:#e7ecfb;border-color:rgba(151,137,255,.5)}
 @media(max-width:760px){.profileSetupScreen{grid-template-columns:1fr;gap:18px}.profileFields{grid-template-columns:1fr}.profileSetupCard{padding:22px}}
+
+.navItem{width:100%;border:0;background:transparent;text-align:left;cursor:pointer;font:inherit;font-size:13px}
+.navItem:focus-visible,.knowledgeTags button:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+.knowledgePage{display:grid;gap:14px}
+.knowledgeHero{padding:24px 26px;display:flex;align-items:center;justify-content:space-between;gap:20px;background:linear-gradient(135deg,rgba(139,124,255,.14),rgba(69,212,255,.06))}
+.knowledgeHero h2{font-size:24px;letter-spacing:-.04em;margin:8px 0}
+.knowledgeHero p{font-size:12px;line-height:1.55;color:var(--muted);margin:0}
+.knowledgeBadge{width:74px;height:74px;flex:0 0 74px;border-radius:50%;display:grid;place-content:center;text-align:center;background:#10182c;border:1px solid var(--line)}
+.knowledgeBadge strong{font-size:23px}.knowledgeBadge span{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.knowledgeControls{padding:16px}
+.knowledgeSearch{height:40px;max-width:none;margin:0 0 13px}
+.knowledgeTags{display:flex;flex-wrap:wrap;gap:7px}
+.knowledgeTags button{border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:#0b1120;color:#8f9ab5;font-size:10px;cursor:pointer}
+.knowledgeTags button.active{color:#fff;border-color:rgba(139,124,255,.55);background:rgba(139,124,255,.18)}
+.knowledgeMeta{font-size:9px;color:#77839f;margin-top:12px}
+.knowledgeGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.knowledgeDoc{padding:17px}
+.knowledgeDocTop{display:flex;align-items:center;gap:8px}
+.knowledgeDocIcon{width:29px;height:29px;display:grid;place-items:center;border-radius:9px;background:#1b2540;color:#a99cff}
+.knowledgeDocLabel{font-size:8px;letter-spacing:.15em;font-weight:800;color:#72809e}
+.knowledgeDoc h3{font-size:15px;margin:13px 0 4px}
+.knowledgeSection{font-size:10px;color:#a69cff}
+.knowledgeDoc p{font-size:11px;line-height:1.65;color:#a2aec8;margin:12px 0}
+.knowledgeDocTags{display:flex;flex-wrap:wrap;gap:5px}
+.knowledgeDocTags span{font-size:8px;color:#aeb9d3;background:#17213a;border:1px solid var(--line);border-radius:999px;padding:4px 7px}
+.knowledgeEmpty{padding:24px;display:grid;gap:6px}
+.knowledgeEmpty strong{font-size:13px}.knowledgeEmpty span,.knowledgeDemoNote{font-size:10px;color:#78849f}
+.knowledgeNotice{padding:14px;border:1px solid rgba(255,112,129,.25);border-radius:12px;color:#ffacb5;background:rgba(255,112,129,.07);font-size:11px}
+.knowledgeDemoNote{padding:4px 2px;line-height:1.5}
+@media(max-width:760px){.knowledgeGrid{grid-template-columns:1fr}.knowledgeHero{padding:19px}.knowledgeHero h2{font-size:20px}}
