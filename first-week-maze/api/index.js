@@ -118,6 +118,35 @@ function groundedAnswer(db, user, question) {
   return { answer, source: { title: source.title, section: source.section, text: source.text }, contact, uncertainty, handoff: uncertainty || q.includes('sensitive') || q.includes('confidential') }
 }
 
+async function aiGroundedAnswer(db, user, question) {
+  const fallback = groundedAnswer(db, user, question)
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) return { ...fallback, aiUsed: false }
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: process.env.OPENAI_MODEL || 'gpt-5-mini',
+        store: false,
+        max_output_tokens: 180,
+        instructions: 'You are an employee onboarding helper. Answer using only the approved source provided in the input. Do not invent policies, dates, people, contact details, or access permissions. If the source does not answer the question, say you are unsure and recommend the provided human contact. Keep the answer concise.',
+        input: `Employee role: ${user.role}; department: ${user.department}; office: ${user.location}.\\nQuestion: ${question}\\nApproved source: ${fallback.source.title} — ${fallback.source.section}\\nSource text: ${fallback.source.text}\\nFallback answer: ${fallback.answer}`
+      })
+    })
+    if (!response.ok) return { ...fallback, aiUsed: false }
+    const data = await response.json()
+    const answer = (data.output || [])
+      .flatMap(item => item.content || [])
+      .find(item => item.type === 'output_text')?.text?.trim()
+    if (!answer) return { ...fallback, aiUsed: false }
+    return { ...fallback, answer, aiUsed: true }
+  } catch (_) {
+    return { ...fallback, aiUsed: false }
+  }
+}
+
 app.get('/api/health', (_, res) => res.json({ ok: true }))
 app.get('/api/users', async (_, res) => res.json((await loadDb()).users))
 app.get('/api/me/:id', async (req,res)=>{ const db=await loadDb(); const user=db.users.find(u=>u.id===req.params.id); if(!user) return res.status(404).json({error:'User not found'}); res.json({user, plan:getPlan(db,user)}) })
@@ -162,7 +191,7 @@ app.post('/api/reminders', async (req,res)=>{
 })
 app.post('/api/assistant', async (req,res)=>{
   const db=await loadDb(); const user=db.users.find(u=>u.id===req.body.userId); if(!user) return res.status(404).json({error:'User not found'})
-  const result=groundedAnswer(db,user,req.body.question || '')
+  const result=await aiGroundedAnswer(db,user,req.body.question || '')
   if(result.handoff) {
     const owner=result.contact?.team || 'People Operations'
     const escalation={id:crypto.randomUUID(), userId:user.id, question:req.body.question, owner, createdAt:new Date().toISOString(), status:'open'}
