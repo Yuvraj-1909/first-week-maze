@@ -180,6 +180,21 @@ async function aiGroundedAnswer(db, user, question) {
 }
 
 app.get('/api/health', (_, res) => res.json({ ok: true }))
+app.get('/api/knowledge', async (_, res, next) => {
+  try {
+    const db = await loadDb()
+    const documents = (db.knowledgeDocuments || []).map(doc => ({
+      id: String(doc.id),
+      title: String(doc.title || 'Untitled source'),
+      section: String(doc.section || 'General'),
+      text: String(doc.text || ''),
+      tags: Array.isArray(doc.tags) ? doc.tags.map(String) : []
+    }))
+    res.json({ documents, total: documents.length })
+  } catch (error) {
+    next(error)
+  }
+})
 app.get('/api/users', async (_, res) => res.json((await loadDb()).users))
 app.get('/api/me/:id', async (req,res)=>{ const db=await loadDb(); const user=db.users.find(u=>u.id===req.params.id); if(!user) return res.status(404).json({error:'User not found'}); res.json({user, plan:getPlan(db,user)}) })
 app.post('/api/onboarding/generate', async (req,res)=>{
