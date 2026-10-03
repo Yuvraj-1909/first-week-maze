@@ -80,7 +80,7 @@ function App(){
           <button type="button" className={`navItem ${page==='overview'?'active':''}`} onClick={()=>setPage('overview')}><Icon>⌂</Icon> Overview</button>
           <a className="navItem"><Icon>✓</Icon> My checklist <span className="count">{stats.left}</span></a>
           <button type="button" className={`navItem ${page==='knowledge'?'active':''}`} onClick={()=>setPage('knowledge')}><Icon>◌</Icon> Knowledge base</button>
-          <a className="navItem"><Icon>?</Icon> Help & handoff</a>
+          <button type="button" className={`navItem ${page==='help'?'active':''}`} onClick={()=>setPage('help')}><Icon>?</Icon> Help & handoff</button>
         </nav>
         <div className="sidebarTip"><div className="tipDot">✦</div><div><b>Onboarding principle</b><p>What to do. How to do it. Who to contact.</p></div></div>
       </>}
@@ -89,8 +89,8 @@ function App(){
 
     <main className="main">
 
-      <header className="topbar"><div><div className="eyebrow">{mode==='employee'?'EMPLOYEE WORKSPACE':'PEOPLE OPERATIONS'}</div><h1>{mode==='employee'?(page==='knowledge'?'Knowledge base, made searchable.':'Your first week, without the maze.'):'Onboarding health at a glance.'}</h1></div><div className="topActions">{mode==='employee'&&page==='overview'&&<button className="ghost" onClick={()=>setShowGenerator(true)}>✦ Personalize</button>}<button className="ghost mobileDemo" onClick={changeProfile}>Change profile</button><div className="notif">◔<span></span></div><div className="avatar small">{user.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div></div></header>
-      {mode==='employee'?(page==='knowledge'?<KnowledgeBaseView onBack={()=>setPage('overview')}/>:<EmployeeView {...{user,plan,stats,days,filtered,filter,setFilter,search,setSearch,toggleTask,scheduleReminder,assistantOpen,setAssistantOpen,messages,typing,question,setQuestion,askAssistant,showGenerator,setShowGenerator,profileForm,setProfileForm,generate}}/>):<AdminView admin={admin} onRefresh={loadAdmin}/>} 
+      <header className="topbar"><div><div className="eyebrow">{mode==='employee'?'EMPLOYEE WORKSPACE':'PEOPLE OPERATIONS'}</div><h1>{mode==='employee'?(page==='knowledge'?'Knowledge base, made searchable.':page==='help'?'Get help with a clear handoff.':'Your first week, without the maze.'):'Onboarding health at a glance.'}</h1></div><div className="topActions">{mode==='employee'&&page==='overview'&&<button className="ghost" onClick={()=>setShowGenerator(true)}>✦ Personalize</button>}<button className="ghost mobileDemo" onClick={changeProfile}>Change profile</button><div className="notif">◔<span></span></div><div className="avatar small">{user.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div></div></header>
+      {mode==='employee'?(page==='knowledge'?<KnowledgeBaseView onBack={()=>setPage('overview')}/>:page==='help'?<HelpHandoffView userId={userId} user={user}/>:<EmployeeView {...{user,plan,stats,days,filtered,filter,setFilter,search,setSearch,toggleTask,scheduleReminder,assistantOpen,setAssistantOpen,messages,typing,question,setQuestion,askAssistant,showGenerator,setShowGenerator,profileForm,setProfileForm,generate}}/>):<AdminView admin={admin} onRefresh={loadAdmin}/>} 
     </main>
     {toast && <div className="toast">{toast}</div>}
   </div>
@@ -155,6 +155,106 @@ function EmployeeView({user,plan,stats,days,filtered,filter,setFilter,search,set
     </section>
     {showGenerator&&<GeneratorModal {...{profileForm,setProfileForm,generate,setShowGenerator}}/>}
   </>
+}
+
+function HelpHandoffView({userId,user}){
+  const [handoffs,setHandoffs]=useState([])
+  const [contacts,setContacts]=useState([])
+  const [buddy,setBuddy]=useState('')
+  const [category,setCategory]=useState('General onboarding')
+  const [question,setQuestion]=useState('')
+  const [loading,setLoading]=useState(true)
+  const [submitting,setSubmitting]=useState(false)
+  const [error,setError]=useState('')
+  const [saved,setSaved]=useState(null)
+
+  useEffect(()=>{
+    let active=true
+    request(`/handoffs/${encodeURIComponent(userId)}`)
+      .then(data=>{
+        if(!active) return
+        setHandoffs(Array.isArray(data.handoffs)?data.handoffs:[])
+        setContacts(Array.isArray(data.contacts)?data.contacts:[])
+        setBuddy(data.buddy || '')
+      })
+      .catch(err=>{ if(active) setError(err.message || 'Could not load your handoffs.') })
+      .finally(()=>{ if(active) setLoading(false) })
+    return ()=>{ active=false }
+  },[userId])
+
+  async function submit(event){
+    event.preventDefault()
+    setError('')
+    setSaved(null)
+    if(question.trim().length<5){setError('Please describe what you need help with.');return}
+    setSubmitting(true)
+    try{
+      const data=await request('/handoffs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId,question:question.trim(),category})})
+      setSaved(data.escalation)
+      setHandoffs(items=>[data.escalation,...items].slice(0,20))
+      setQuestion('')
+    }catch(err){setError(err.message || 'Could not save your request.')}
+    finally{setSubmitting(false)}
+  }
+
+  return <section className="helpPage">
+    <div className="helpHero card">
+      <div className="cardKicker">HELP & HUMAN HANDOFF</div>
+      <h2>Get your question to the right team.</h2>
+      <p>Choose a support team and describe what’s blocking you. Your request is saved as an open handoff record.</p>
+    </div>
+    <div className="helpGrid">
+      <section className="helpForm card">
+        <div className="cardKicker">NEW SUPPORT REQUEST</div>
+        <h3>What do you need help with?</h3>
+        <form onSubmit={submit}>
+          <label>Send this to
+            <select value={category} onChange={event=>setCategory(event.target.value)}>
+              <option>General onboarding</option>
+              <option>People Operations</option>
+              <option>IT Service Desk</option>
+              <option>Security Team</option>
+              <option>Backend Platform</option>
+              <option>Product Leadership</option>
+              <option>Workplace Services</option>
+            </select>
+          </label>
+          <label>Your question
+            <textarea required minLength="5" maxLength="1000" rows="5" value={question} onChange={event=>setQuestion(event.target.value)} placeholder="Describe the step you’re stuck on or the help you need…"/>
+          </label>
+          <div className="helpFormMeta">{question.length}/1000 characters · General requests go to People Operations</div>
+          {error&&<div className="helpError" role="alert">{error}</div>}
+          <button className="primary" type="submit" disabled={submitting}>{submitting?'Saving request…':'Send help request →'}</button>
+        </form>
+        {saved&&<div className="helpSuccess" role="status">
+          <strong>Handoff saved</strong>
+          <span>Reference: {saved.id}</span>
+          <span>Assigned to: {saved.owner} · Status: {saved.status}</span>
+        </div>}
+        <div className="helpDemoNote">Demo behavior: this saves a request in the app database. It does not send email, Teams messages, or notify a real support queue. Use fictional questions only; this demo profile is not a secure login.</div>
+      </section>
+      <section className="helpContacts card">
+        <div className="cardKicker">WHO CAN HELP</div>
+        <h3>People and support teams</h3>
+        {buddy&&<div className="buddyCard"><span className="buddyIcon">✦</span><div><b>{buddy}</b><small>Your onboarding buddy · demo contact</small></div></div>}
+        {loading?<div className="helpSubtle">Loading contacts…</div>:<div className="contactList">
+          {contacts.map(contact=><div className="helpContact" key={contact.id}>
+            <div><b>{contact.team}</b><span>{contact.name} · {contact.role}</span></div>
+            <small>{contact.email}</small>
+          </div>)}
+        </div>}
+      </section>
+    </div>
+    <section className="helpHistory card">
+      <div className="sectionHead"><div><div className="cardKicker">YOUR RECENT REQUESTS</div><h3>Handoff history</h3></div><span className="helpCount">{handoffs.length}</span></div>
+      {loading?<div className="helpSubtle">Loading your saved requests…</div>:handoffs.length===0?<div className="helpEmpty">No handoff requests yet. If you get stuck, send one above.</div>:<div className="handoffList">
+        {handoffs.map(item=><article className="handoffRow" key={item.id}>
+          <div className="handoffStatus">{item.status || 'open'}</div>
+          <div className="handoffDetails"><b>{item.category || 'General onboarding'} · {item.owner}</b><p>{item.question}</p><small>{item.createdAt?new Date(item.createdAt).toLocaleString():'Date unavailable'} · Ref {item.id}</small></div>
+        </article>)}
+      </div>}
+    </section>
+  </section>
 }
 
 function KnowledgeBaseView({onBack}){
