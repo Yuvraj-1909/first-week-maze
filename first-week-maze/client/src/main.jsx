@@ -17,6 +17,7 @@ const Icon = ({children, className=''}) => <span className={`icon ${className}`}
 function App(){
   const [mode,setMode]=useState('employee')
   const [page,setPage]=useState('overview')
+  const [sidebarOpen,setSidebarOpen]=useState(false)
   const [userId,setUserId]=useState(()=>window.localStorage.getItem('fw-user-id') || '')
   const [user,setUser]=useState(null)
   const [plan,setPlan]=useState([])
@@ -71,25 +72,26 @@ function App(){
   if(!userId) return <ProfileSetup profileForm={profileForm} setProfileForm={setProfileForm} onSubmit={generate} error={profileError} loading={generating}/>
   if(connectionError || !user) return <ConnectionScreen error={connectionError} onRetry={()=>loadUser(userId)}/>
   return <div className="app">
-    <aside className="sidebar">
-      <div className="brand"><div className="brandMark">FW</div><div><div className="brandName">First-Week Maze</div><div className="brandSub">Onboarding Command Center</div></div></div>
-      <div className="switcher"><button className={mode==='employee'?'active':''} onClick={()=>setMode('employee')}><Icon>◉</Icon> Employee</button><button className={mode==='admin'?'active':''} onClick={()=>setMode('admin')}><Icon>▦</Icon> HR Admin</button></div>
+    <aside className={`sidebar ${sidebarOpen?'sidebarOpen':''}`} id="mobile-navigation">
+      <div className="brand"><div className="brandMark">FW</div><div><div className="brandName">First-Week Maze</div><div className="brandSub">Onboarding Command Center</div></div><button type="button" className="sidebarClose" onClick={()=>setSidebarOpen(false)} aria-label="Close navigation menu">×</button></div>
+      <div className="switcher"><button className={mode==='employee'?'active':''} onClick={()=>{setMode('employee');setSidebarOpen(false)}}><Icon>◉</Icon> Employee</button><button className={mode==='admin'?'active':''} onClick={()=>{setMode('admin');setSidebarOpen(false)}}><Icon>▦</Icon> HR Admin</button></div>
       {mode==='employee' && <>
         <div className="profileMini"><div className="avatar">{user.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div><div><b>{user.name}</b><span>{user.role} · {user.department}</span><span>{user.location}</span></div></div><button className="profileChange" onClick={changeProfile}>Change employee profile</button>
         <nav>
-          <button type="button" className={`navItem ${page==='overview'?'active':''}`} onClick={()=>setPage('overview')}><Icon>⌂</Icon> Overview</button>
-          <button type="button" className={`navItem ${page==='checklist'?'active':''}`} onClick={()=>setPage('checklist')} aria-current={page==='checklist'?'page':undefined}><Icon>✓</Icon> My checklist <span className="count">{stats.left}</span></button>
-          <button type="button" className={`navItem ${page==='knowledge'?'active':''}`} onClick={()=>setPage('knowledge')}><Icon>◌</Icon> Knowledge base</button>
-          <button type="button" className={`navItem ${page==='help'?'active':''}`} onClick={()=>setPage('help')}><Icon>?</Icon> Help & handoff</button>
+          <button type="button" className={`navItem ${page==='overview'?'active':''}`} onClick={()=>{setPage('overview');setSidebarOpen(false)}}><Icon>⌂</Icon> Overview</button>
+          <button type="button" className={`navItem ${page==='checklist'?'active':''}`} onClick={()=>{setPage('checklist');setSidebarOpen(false)}} aria-current={page==='checklist'?'page':undefined}><Icon>✓</Icon> My checklist <span className="count">{stats.left}</span></button>
+          <button type="button" className={`navItem ${page==='knowledge'?'active':''}`} onClick={()=>{setPage('knowledge');setSidebarOpen(false)}}><Icon>◌</Icon> Knowledge base</button>
+          <button type="button" className={`navItem ${page==='help'?'active':''}`} onClick={()=>{setPage('help');setSidebarOpen(false)}}><Icon>?</Icon> Help & handoff</button>
         </nav>
         <div className="sidebarTip"><div className="tipDot">✦</div><div><b>Onboarding principle</b><p>What to do. How to do it. Who to contact.</p></div></div>
       </>}
       <div className="sidebarFooter"><span>Microsoft Innovate 2026</span><span>Demo environment</span></div>
     </aside>
+      {sidebarOpen&&<button type="button" className="sidebarScrim" onClick={()=>setSidebarOpen(false)} aria-label="Close navigation menu"/>}
 
     <main className="main">
 
-      <header className="topbar"><div><div className="eyebrow">{mode==='employee'?'EMPLOYEE WORKSPACE':'PEOPLE OPERATIONS'}</div><h1>{mode==='employee'?(page==='knowledge'?'Knowledge base, made searchable.':page==='help'?'Get help with a clear handoff.':page==='checklist'?'Your first-week checklist.':'Your first week, without the maze.'):'Onboarding health at a glance.'}</h1></div><div className="topActions">{mode==='employee'&&page==='overview'&&<button className="ghost" onClick={()=>setShowGenerator(true)}>✦ Personalize</button>}<button className="ghost mobileDemo" onClick={changeProfile}>Change profile</button><div className="notif">◔<span></span></div><div className="avatar small">{user.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div></div></header>
+      <header className="topbar"><div><div className="eyebrow">{mode==='employee'?'EMPLOYEE WORKSPACE':'PEOPLE OPERATIONS'}</div><h1>{mode==='employee'?(page==='knowledge'?'Knowledge base, made searchable.':page==='help'?'Get help with a clear handoff.':page==='checklist'?'Your first-week checklist.':'Your first week, without the maze.'):'Onboarding health at a glance.'}</h1></div><div className="topActions"><button type="button" className="mobileMenuButton" onClick={()=>setSidebarOpen(true)} aria-label="Open navigation menu" aria-expanded={sidebarOpen} aria-controls="mobile-navigation"><span aria-hidden="true">☰</span></button>{mode==='employee'&&page==='overview'&&<button className="ghost" onClick={()=>setShowGenerator(true)}>✦ Personalize</button>}<button className="ghost mobileDemo" onClick={changeProfile}>Change profile</button><div className="notif">◔<span></span></div><div className="avatar small">{user.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div></div></header>
       {mode==='employee'?(page==='knowledge'?<KnowledgeBaseView onBack={()=>setPage('overview')}/>:page==='help'?<HelpHandoffView userId={userId} user={user}/>:page==='checklist'?<ChecklistView {...{user,plan,stats,days,filtered,filter,setFilter,search,setSearch,toggleTask,scheduleReminder}}/>:<EmployeeView {...{user,plan,stats,days,filtered,filter,setFilter,search,setSearch,toggleTask,scheduleReminder,assistantOpen,setAssistantOpen,messages,typing,question,setQuestion,askAssistant,showGenerator,setShowGenerator,profileForm,setProfileForm,generate}}/>):<AdminView admin={admin} onRefresh={loadAdmin}/>} 
     </main>
     {toast && <div className="toast">{toast}</div>}
