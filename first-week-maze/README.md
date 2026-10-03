@@ -44,6 +44,7 @@ The UI starts on `u1`; use the Personalize button to generate a different profil
 
 ## API overview
 
+- `GET /api/knowledge` — searchable onboarding source documents and tags
 - `GET /api/users` — demo users
 - `GET /api/me/:id` — profile + personalized checklist
 - `POST /api/onboarding/generate` — generate/update personalized week
